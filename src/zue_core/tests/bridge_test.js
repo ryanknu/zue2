@@ -14,15 +14,19 @@
 
 module('Bridge Tests');
 
-test('Module Loaded', function() {
+test('#b01 Module Loaded', function() {
     ok(typeof zue.bridge === 'object', 'Module is loaded');
     ok(typeof zue.bridge.locate === 'function', '`locate` function is available in the module');
 });
 
-test('Locate Test', function() {
+test('#b02 Locate Test', function() {
     m = _bridgeZueModule(
     {
-        get: function(url, obj, s, f) {
+        exec: function(ajm) {
+            var url = ajm.url;
+            var obj = ajm.model;
+            var s = ajm.success;
+            var f = ajm.failure;
             ok(url === 'https://www.meethue.com/api/nupnp', 'Discovery URL is ok');
             ok(obj.hue_username === zue.core.getHueUser(), 'Hue user is defined on the bridge object');
             ok(typeof obj.assembleUrl === 'function', 'Object prototype implements assembleUrl');
@@ -40,7 +44,7 @@ test('Locate Test', function() {
     m.locate();
 });
 
-test('Found Bridge Test', function() {
+test('#b03 Found Bridge Test', function() {
     m = _bridgeZueModule({ get: function(url, obj, s, f) {} }, {
         trigger: function(e, o) {
             ok(e === zue.bridge.BRIDGE_FOUND, 'Found event triggered');
@@ -51,7 +55,7 @@ test('Found Bridge Test', function() {
     m._foundBridge(new Bridge());
 });
 
-test('No Bridge Found Test', function() {
+test('#b04 No Bridge Found Test', function() {
     m = _bridgeZueModule({ get: function(url, obj, s, f) {} }, {
         trigger: function(e, o) {
             ok(e === zue.bridge.NO_BRIDGE_FOUND, 'Not found event triggered');
@@ -62,13 +66,13 @@ test('No Bridge Found Test', function() {
     m._noBridgeFound();
 });
 
-test('Exchange Data Test', function() {
+test('#b05 Exchange Data Test', function() {
     obj = new Bridge();
     
     obj.exchangeData(JSON.parse('{}'));
-    ok(typeof obj.id === 'undefined', 'Object.id is undefined');
-    ok(typeof obj.internalipaddress === 'undefined', 'Object.internalipaddress is undefined');
-    ok(typeof obj.macaddress === 'undefined', 'Object.macaddress is undefined');
+    ok(obj.id === '', 'Object.id is undefined');
+    ok(obj.internalipaddress === '', 'Object.internalipaddress is undefined');
+    ok(obj.macaddress === '', 'Object.macaddress is undefined');
 
     obj.exchangeData(JSON.parse('{"id":"001788fffe0923cb","internalipaddress":"192.168.1.37","macaddress":"00:17:88:09:23:cb"}'));
     ok(obj.id === '001788fffe0923cb', 'Object.id is set properly');
@@ -76,7 +80,7 @@ test('Exchange Data Test', function() {
     ok(obj.macaddress === '00:17:88:09:23:cb', 'Object.macaddress is set properly');
 });
 
-test('Assemble URL Test', function() {
+test('#b06 Assemble URL Test', function() {
     obj = new Bridge();
     obj.hue_username = 'zue_0_2';
     obj.internalipaddress = '192.168.1.37';
@@ -88,7 +92,7 @@ test('Assemble URL Test', function() {
     ok(obj.assembleUrl('/groups/0') === 'https://10.0.1.99/api/unit_test/groups/0');
 });
 
-test('Assemble Ro0t URL Test', function() {
+test('#b07 Assemble Ro0t URL Test', function() {
     obj = new Bridge();
     obj.hue_username = 'zue_0_2';
     obj.internalipaddress = '192.168.1.37';
@@ -98,19 +102,4 @@ test('Assemble Ro0t URL Test', function() {
     obj.hue_username = 'unit_test';
     obj.internalipaddress = '10.0.1.99';
     ok(obj.assembleRootUrl() === 'https://10.0.1.99/api');
-});
-
-test('Set Core Bridge Test', function() {
-    m = _bridgeZueModule();
-    obj = new Bridge();
-    obj.internalipaddress = '192.168.1.37';
-    m.setCoreBridge(obj);
-    
-    ok(zue.core.getBridge().internalipaddress === '192.168.1.37', 'Core bridge has correct ip address');
-    
-    obj = new Bridge();
-    obj.internalipaddress = '10.0.1.99';
-    m.setCoreBridge(obj);
-    
-    ok(zue.core.getBridge().internalipaddress === '10.0.1.99', 'Core bridge has correct ip address');
 });

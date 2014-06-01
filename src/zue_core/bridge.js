@@ -23,6 +23,9 @@ function Bridge() {
     this.error = '';
 }
 
+/**
+ * @test: #b05
+ */
 Bridge.prototype.exchangeData = function(data) {
     if( 'id' in data ) this.id = data.id;
     if( 'internalipaddress' in data ) this.internalipaddress = data.internalipaddress;
@@ -31,10 +34,16 @@ Bridge.prototype.exchangeData = function(data) {
     if( 'success' in data ) this.hue_username = data.success.username;
 };
 
+/**
+ * @test: #b06
+ */
 Bridge.prototype.assembleUrl = function(url_part) {
     return this.protocol + '://' + this.internalipaddress + this.URL_API_PART + '/' + this.hue_username + url_part;
 };
 
+/**
+ * @test: #b07
+ */
 Bridge.prototype.assembleRootUrl = function() {
     return this.protocol + '://' + this.internalipaddress + this.URL_API_PART;
 };
@@ -45,16 +54,25 @@ var _bridgeZueModule = function(ajax, event_manager) {
     var BRIDGE_FOUND = 'bridge.found';
     var NO_BRIDGE_FOUND = 'bridge.not_found';
     
+    /**
+     * @test: #b03
+     */
     var foundBridge = function(bridge) {
         event_manager.trigger(BRIDGE_FOUND, bridge);
         return '_bridgeZueModule.foundBridge';
     };
     
+    /**
+     * @test: #b04
+     */
     var noBridgeFound = function() {
         event_manager.trigger(NO_BRIDGE_FOUND);
         return '_bridgeZueModule.noBridgeFound';
     }
     
+    /**
+     * @test: #b02
+     */
     var locate = function()
     {
         var bridge = new Bridge();
@@ -66,13 +84,8 @@ var _bridgeZueModule = function(ajax, event_manager) {
         });
     }
     
-    var setCoreBridge = function(bridge) {
-        zue.core.setBridge(bridge);
-    }
-    
     return {
         locate: locate,
-        setCoreBridge: setCoreBridge,
         
         /* constants */
         BRIDGE_FOUND: BRIDGE_FOUND,
@@ -84,5 +97,7 @@ var _bridgeZueModule = function(ajax, event_manager) {
     };
 }
 
+/**
+ * @test: #b01
+ */
 zue.core.attach('bridge', _bridgeZueModule);
-zue.core.listenFor(zue.bridge.BRIDGE_FOUND, zue.bridge.setCoreBridge);

@@ -48,8 +48,20 @@ Light.prototype.exchangeData = function(data) {
     }
 }
 
-Light.prototype.switchOn = function(on) {
+Light.prototype.toggle = function() {
     zue.lights.updateLightState(this, {on: !this.state.on});
+}
+
+Light.prototype.setHue = function(hue) {
+    zue.lights.updateLightState(this, {hue: hue });
+}
+
+Light.prototype.setBri = function(bri) {
+    zue.lights.updateLightState(this, { bri: bri });
+}
+
+Light.prototype.setSat = function(sat) {
+    zue.lights.updateLightState(this, { sat: sat });
 }
 
 function LightUpdateResponse()

@@ -31,12 +31,18 @@
     
     var em = {
         o: {},
+        /**
+         * @test: none
+         */
         attach: function(event, callback) {
             if ( this.o[event] === undefined ) {
                 this.o[event] = [];
             }
             this.o[event].push(callback);
         },
+        /**
+         * @test: none
+         */
         trigger: function(event, argument) {
             log('event: ' + event + ' Arg: ' + JSON.stringify(argument));
             if ( detectArray(this.o[event]) ) {
@@ -57,6 +63,9 @@
             failure: function() {}
         },
         
+        /**
+         * @test: none
+         */
         exec: function(_options) {
             var options = $.extend( {}, this._defaults, _options );
             log('ajax:  ' + options.method + ' ' + options.url);
@@ -105,82 +114,6 @@
                 ajaxOptions.data = JSON.stringify(options.data);
             }
             $.ajax(ajaxOptions);
-        },
-        
-        post: function(url, data, obj, success, failure) {
-            $.post(url, JSON.stringify(data), function(data) {
-                if ( detectArray(data) ) {
-                    if ( data.length == 0 ) {
-                        em.trigger(HUE_ERROR, { type: 10001, description: 'empty result set' });
-                    }
-                    for ( var i in data ) {
-                        if ( data.hasOwnProperty(i) ) {
-                            data[i]._i = i;
-                            if ( 'error' in data[i] ) {
-                                em.trigger(HUE_ERROR, data[i].error);
-                            }
-                            else {
-                                var _o = $.extend(true, {}, obj);
-                                _o.exchangeData(data[i]);
-                                success(_o);
-                            }
-                        }
-                    }
-                }
-                else if ( typeof data === 'object' ) {
-                    if ( 'error' in data ) {
-                        em.trigger(HUE_ERROR, data.error);
-                    }
-                    else {
-                        obj.exchangeData(data);
-                        success(obj);
-                    }
-                }
-                else {
-                    throw '`data` is not something I can work with';
-                }
-            })
-            .error(function() {
-                em.trigger(HUE_ERROR, { type: 10000, description: 'no response from server' });
-            });;
-        },
-        
-        get: function(url, obj, success, failure) {
-            $.get(url, function(data) {
-                if ( detectArray(data) ) {
-                    if ( data.length == 0 ) {
-                        em.trigger(HUE_ERROR, { type: 10001, description: 'empty result set' });
-                    }
-                    for ( var i in data ) {
-                        if ( data.hasOwnProperty(i) ) {
-                            data[i]._i = i;
-                            if ( 'error' in data[i] ) {
-                                em.trigger(HUE_ERROR, data[i].error);
-                            }
-                            else {
-                                var _o = $.extend(true, {}, obj);
-                                _o.exchangeData(data[i]);
-                                success(_o);
-                            }
-                        }
-                    }
-                }
-                else if ( typeof data === 'object' ) {
-                    if ( 'error' in data ) {
-                        em.trigger(HUE_ERROR, data.error);
-                    }
-                    else {
-                        obj.exchangeData(data);
-                        success(obj);
-                    }
-                }
-                else {
-                    throw '`data` is not something I can work with';
-                }
-            })
-            .error(function() {
-                em.trigger(HUE_ERROR, { type: 10000, description: 'no response from server' });
-            });
         }
     };
     
@@ -199,6 +132,9 @@
         return any_keys;
     }
     
+    /**
+     * @test: none
+     */
     var attach = function(module, o) {
         if ( module === 'core' ) {
             throw 'Cannot extend or modify zue core';
@@ -226,6 +162,9 @@
         return bridge;
     }
     
+    /**
+     * @test: none
+     */
     var listenFor = function(event, listener) {
         em.attach(event, listener);
     }
