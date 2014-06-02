@@ -1,37 +1,29 @@
-/**
-Hoodie chunk left so that we can see how hoodie operates
 
 // initialize Hoodie
 var hoodie  = new Hoodie()
 
+hoodie.store.findAll('bridge').then( function(bridges) {
+    console.log(JSON.stringify(bridges));
+    if ( bridges.length < 1 ) {
+        zue.bridge.locate();
+        return;
+    }
+    
+    for( var i = 0; i < bridges.length; i++ ) {
+        var b = new Bridge();
+        b.exchangeData(bridges[i]);
+        zue.lights.getAllLights(b);
+    }
+});
+
 // initial load of all todo items from the store
-hoodie.store.findAll('todo').then( function(todos) {
-  todos.sort( sortByCreatedAt ).forEach( addTodo )
-})
+// hoodie.store.findAll('todo').then( function(todos) {
+//   todos.sort( sortByCreatedAt ).forEach( addTodo )
+// })
 
-// when a new todo gets stored, add it to the UI
-hoodie.store.on('add:todo', addTodo)
 // clear todo list when the get wiped from store
-hoodie.account.on('signout', clearTodos)
+//hoodie.account.on('signout', clearTodos)
 
-// handle creating a new task
-$('#todoinput').on('keypress', function(event) {
-  if (event.keyCode == 13) { // ENTER
-    hoodie.store.add('todo', {title: event.target.value});
-    event.target.value = '';
-  }
-})
-
-function addTodo( todo ) { 
-  $('#todolist').append('<li>'+todo.title+'</li>');
-}
-function clearTodos() {
-  $('#todolist').html('');
-}
-function sortByCreatedAt(a, b) { 
-  return a.createdAt > b.createdAt
-}
-**/
 
 // begin ZUE UI code here
 
@@ -53,7 +45,6 @@ $('#link-button').on('click', function() {
 })
 .hide();
 
-var bridge;
 var linking = false;
 var app = 'california';
 
@@ -74,6 +65,14 @@ function getLight(element) {
     return $(element).closest('li[light-id]').data('light');
 }
 
+function hoodieStore(bridge) {
+    console.log(JSON.stringify(bridge));
+    hoodie.store.add('bridge', JSON.parse(JSON.stringify(bridge)))
+        .done(function(o) {
+            console.log('added: ' + JSON.stringify(o));
+        });;
+}
+
 // RK: Enable the name-based group simulator
 zue.enablePlugin('SimulateGroupsByNames');
 
@@ -86,9 +85,9 @@ zue.on(HUE_ERROR, function(err) {
     }
 });
 
-zue.on(BRIDGE_FOUND, function(_bridge) {
-    bridge = _bridge;
+zue.on(BRIDGE_FOUND, function(bridge) {
     bridge.hue_username = app;
+    hoodieStore(bridge);
     zue.lights.getAllLights(bridge);
 });
 
@@ -130,13 +129,17 @@ zue.on(GROUP_ADDED, function(group) {
 
 
 zue.on(LINK_FAILURE, function(user) {
-    console.log(JSON.stringify(user));
     if ( linking ) {
         setTimeout(createUser, 5000);
     }
 });
 
-zue.on(LINK_SUCCESS, function(user) {
-    alert(user.username);
+zue.on(LINK_SUCCESS, function(bridge) {
+    hoodieStore(bridge);
+    zue.lights.getAllLights(bridge);
 });
-zue.bridge.locate();
+
+zue.on(NO_BRIDGE_FOUND, function() {
+    $('#no-bridge').modal();
+});
+

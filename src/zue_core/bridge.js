@@ -30,6 +30,7 @@ Bridge.prototype.exchangeData = function(data) {
     if( 'id' in data ) this.id = data.id;
     if( 'internalipaddress' in data ) this.internalipaddress = data.internalipaddress;
     if( 'macaddress' in data ) this.macaddress = data.macaddress;
+    if( 'hue_username' in data ) this.hue_username = data.hue_username;
     if( 'error' in data ) this.error = data.error.type;
     if( 'success' in data ) this.hue_username = data.success.username;
 };
@@ -78,7 +79,8 @@ var _bridgeZueModule = function(zue_core) {
             url: PORTAL_LOCAL_DISCOVERY_URL,
             model: bridge,
             success: foundBridge,
-            failure: noBridgeFound
+            failure: noBridgeFound,
+            trap: true
         });
     }
     

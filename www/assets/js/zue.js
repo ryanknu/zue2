@@ -6,7 +6,8 @@ function ZueAjax() {
         url: undefined,
         model: undefined,
         success: function() {},
-        failure: function() {}
+        failure: function() {},
+        trap: false
     };
     this.$ = jQuery;
 }
@@ -18,22 +19,28 @@ ZueAjax.prototype.setEventManager = function(em) {
 ZueAjax.prototype.exec = function(in_options) {
     var $ = this.$;
     var options = $.extend({}, this._defaults, in_options);
+    var em = this.eventManager;
     var ajaxOptions = {
         type: options.method,
         url: options.url,
         success: function(data) {
             if (detectArray(data)) {
                 if (data.length == 0) {
-                    this.eventManager.trigger(HUE_ERROR, {
-                        type: 10001,
-                        description: "empty result set"
-                    });
+                    if (!options.trap) {
+                        em.trigger(HUE_ERROR, {
+                            type: 10001,
+                            description: "empty result set"
+                        });
+                    }
+                    options.failure();
                 }
                 for (var i in data) {
                     if (data.hasOwnProperty(i)) {
                         data[i]._i = i;
                         if ("error" in data[i]) {
-                            this.eventManager.trigger(HUE_ERROR, data[i].error);
+                            if (!options.trap) {
+                                em.trigger(HUE_ERROR, data[i].error);
+                            }
                             options.failure();
                         } else {
                             var _o = $.extend(true, {}, options.model);
@@ -44,7 +51,10 @@ ZueAjax.prototype.exec = function(in_options) {
                 }
             } else if (typeof data === "object") {
                 if ("error" in data) {
-                    this.eventManager.trigger(HUE_ERROR, data.error);
+                    if (!options.trap) {
+                        em.trigger(HUE_ERROR, data.error);
+                    }
+                    options.failure();
                 } else {
                     options.model.exchangeData(data);
                     options.success(options.model);
@@ -54,10 +64,12 @@ ZueAjax.prototype.exec = function(in_options) {
             }
         },
         error: function() {
-            this.eventManager.trigger(HUE_ERROR, {
-                type: 1e4,
-                description: "no/bad response from server"
-            });
+            if (!options.trap) {
+                em.trigger(HUE_ERROR, {
+                    type: 1e4,
+                    description: "no/bad response from server"
+                });
+            }
             options.failure();
         }
     };
@@ -208,6 +220,7 @@ Bridge.prototype.exchangeData = function(data) {
     if ("id" in data) this.id = data.id;
     if ("internalipaddress" in data) this.internalipaddress = data.internalipaddress;
     if ("macaddress" in data) this.macaddress = data.macaddress;
+    if ("hue_username" in data) this.hue_username = data.hue_username;
     if ("error" in data) this.error = data.error.type;
     if ("success" in data) this.hue_username = data.success.username;
 };
@@ -237,7 +250,8 @@ var _bridgeZueModule = function(zue_core) {
             url: PORTAL_LOCAL_DISCOVERY_URL,
             model: bridge,
             success: foundBridge,
-            failure: noBridgeFound
+            failure: noBridgeFound,
+            trap: true
         });
     };
     return {

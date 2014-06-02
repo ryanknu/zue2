@@ -21,7 +21,8 @@ function ZueAjax()
         url: undefined,
         model: undefined,
         success: function() {},
-        failure: function() {}
+        failure: function() {},
+        trap: false
     };
     this.$ = jQuery;
 }
@@ -35,19 +36,25 @@ ZueAjax.prototype.exec = function(in_options)
 {
     var $ = this.$;
     var options = $.extend( {}, this._defaults, in_options );
+    var em = this.eventManager;
     var ajaxOptions = {
         type: options.method,
         url: options.url,
         success: function(data) {
             if ( detectArray(data) ) {
                 if ( data.length == 0 ) {
-                    this.eventManager.trigger(HUE_ERROR, { type: 10001, description: 'empty result set' });
+                    if ( !options.trap ) {
+                        em.trigger(HUE_ERROR, { type: 10001, description: 'empty result set' });
+                    }
+                    options.failure();
                 }
                 for ( var i in data ) {
                     if ( data.hasOwnProperty(i) ) {
                         data[i]._i = i;
                         if ( 'error' in data[i] ) {
-                            this.eventManager.trigger(HUE_ERROR, data[i].error);
+                            if ( !options.trap ) {
+                                em.trigger(HUE_ERROR, data[i].error);
+                            }
                             options.failure();
                         }
                         else {
@@ -60,7 +67,10 @@ ZueAjax.prototype.exec = function(in_options)
             }
             else if ( typeof data === 'object' ) {
                 if ( 'error' in data ) {
-                    this.eventManager.trigger(HUE_ERROR, data.error);
+                    if ( !options.trap ) {
+                        em.trigger(HUE_ERROR, data.error);
+                    }
+                    options.failure();
                 }
                 else {
                     options.model.exchangeData(data);
@@ -72,7 +82,9 @@ ZueAjax.prototype.exec = function(in_options)
             }
         },
         error: function() {
-            this.eventManager.trigger(HUE_ERROR, { type: 10000, description: 'no/bad response from server' });
+            if ( !options.trap ) {
+                em.trigger(HUE_ERROR, { type: 10000, description: 'no/bad response from server' });
+            }
             options.failure();
         }
     };
