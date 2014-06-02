@@ -12,10 +12,8 @@
  *
  */
 
-var _configZueModule = function(ajax, event_manager) {
+var _configZueModule = function(zue_core) {
     'use strict';
-    var LINK_BEGIN = 'config.link_begin';
-    var LINKED = 'config.link_success';
     var ZUE_DEVICE_TYPE = ';zue-powered';
     var MAX_DEVICE_TYPE_LEN = 40;
     
@@ -25,7 +23,7 @@ var _configZueModule = function(ajax, event_manager) {
     var settings = {};
     
     var userCreated = function(bridge) {
-        event_manager.trigger(LINK_SUCCESS, bridge);
+        event_manager.trigger(LINKED, bridge);
     }
     
     var _createUser = function(bridge, request) {
@@ -59,13 +57,9 @@ var _configZueModule = function(ajax, event_manager) {
         createUser: createUser,
         createAnonUser: createAnonUser,
         
-        /* Constants */
-        LINK_BEGIN: LINK_BEGIN,
-        LINKED: LINKED,
-        
         /* testing only */
         _createUser: _createUser
     }
 };
 
-zue.core.attach('config', _configZueModule);
+zue.attach('config', _configZueModule);

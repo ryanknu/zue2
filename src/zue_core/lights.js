@@ -76,24 +76,21 @@ LightUpdateResponse.prototype.exchangeData = function(data) {
     }
 };
 
-var _lightsZueModule = function(ajax, event_manager) {
+var _lightsZueModule = function(zue_core) {
     'use strict';
-    var LIGHT_ADDED = 'lights.added';
-    var LIGHT_UPDATED = 'lights.updated';
-    var LIGHT_UPDATING = 'lights.updating';
     
     var LIGHTS_URL_PART = '/lights';
     var STATE_URL_PART = '/state';
     
     var _lights = function(light) {
-        event_manager.trigger(LIGHT_ADDED, light);
+        zue_core.triggerEvent(LIGHT_ADDED, light);
     }
     
     var lightUpdated = function(light_update_status) {
         if ( light_update_status.status == 'success' ) {
             var light = light_update_status.light;
             var url = light.bridge.assembleUrl(LIGHTS_URL_PART + '/' + light.id);
-            ajax.exec({
+            zue_core.ajaxExec({
                 url: url,
                 model: light,
                 success: _lightUpdated
@@ -103,14 +100,14 @@ var _lightsZueModule = function(ajax, event_manager) {
     
     var _lightUpdated = function(light)
     {
-        event_manager.trigger(LIGHT_UPDATED, light);
+        zue_core.triggerEvent(LIGHT_UPDATED, light);
     }
     
     var getAllLights = function(bridge) {
         var url = bridge.assembleUrl(LIGHTS_URL_PART);
         var model = new Light();
         model.bridge = bridge;
-        ajax.exec({
+        zue_core.ajaxExec({
             url: url,
             model: model,
             success: _lights
@@ -119,7 +116,7 @@ var _lightsZueModule = function(ajax, event_manager) {
     
     var getLightDetails = function(light) {
         var url = light.bridge.assembleUrl(LIGHTS_URL_PART + '/' + light.id);
-        ajax.exec({
+        zue_core.ajaxExec({
             url: url,
             model: light,
             success: _lights
@@ -130,8 +127,8 @@ var _lightsZueModule = function(ajax, event_manager) {
         var url = light.bridge.assembleUrl(LIGHTS_URL_PART + '/' + light.id + STATE_URL_PART );
         var model = new LightUpdateResponse();
         model.light = light;
-        event_manager.trigger(LIGHT_UPDATING, light);
-        ajax.exec({
+        zue_core.triggerEvent(LIGHT_UPDATING, light);
+        zue_core.ajaxExec({
             url: url,
             model: model,
             method: 'put',
@@ -144,11 +141,7 @@ var _lightsZueModule = function(ajax, event_manager) {
         getAllLights: getAllLights,
         getLightDetails: getLightDetails,
         updateLightState: updateLightState,
-        
-        LIGHT_ADDED: LIGHT_ADDED,
-        LIGHT_UPDATED: LIGHT_UPDATED,
-        LIGHT_UPDATING: LIGHT_UPDATING
     }
 };
 
-zue.core.attach('lights', _lightsZueModule);
+zue.attach('lights', _lightsZueModule);

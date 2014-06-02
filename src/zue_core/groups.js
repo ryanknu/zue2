@@ -32,15 +32,14 @@ Group.prototype.toggle = function()
     }
 }
 
-var _groupsZueModule = function(ajax, event_manager) {
+var _groupsZueModule = function(zue_core) {
     'use strict';
     var use_soft_groups = false;
     var all_groups = [];
     
-    var GROUP_ADDED = 'group.added';
-    var GROUP_LIGHT_ADDED = 'group.light_added';
-    var GROUP_UPDATED = 'group.updated';
-    var GROUP_UPDATING = 'group.updating';
+    var GROUP_IMPL_HARDWARE = 'hardware';
+    var GROUP_IMPL_NAME = 'name';
+    var GROUP_IMPL_SCHEDULE = 'schedule';
     
     var getAGroup = function(group_name)
     {
@@ -52,7 +51,7 @@ var _groupsZueModule = function(ajax, event_manager) {
         var g = new Group();
         g.name = group_name;
         all_groups.push(g);
-        event_manager.trigger(GROUP_ADDED, g);
+        zue_core.triggerEvent(GROUP_ADDED, g);
         return g;
     }
     
@@ -66,36 +65,50 @@ var _groupsZueModule = function(ajax, event_manager) {
         }
         var group = getAGroup(group_name);
         group.addLight(light);
-        event_manager.trigger(GROUP_LIGHT_ADDED, group);
+        zue_core.triggerEvent(GROUP_LIGHT_ADDED, group);
     }
+    
+    var enableGroupImplementation = function(group_impl) {
+        if ( group_impl === GROUP_IMPL_NAME ) {
+            new GroupNameImplementation();
+        }
+    };
 
     var useSoftGroups = function(soft_groups) {
         use_soft_groups = soft_groups;
         if ( use_soft_groups ) {
-            zue.core.listenFor(zue.lights.LIGHT_ADDED, softLightAdded);
+            zue_core.on(LIGHT_ADDED, softLightAdded);
         }
     };
     
-    var getAllGroups = function(bridge) {
-        var url = bridge.assembleUrl(LIGHTS_URL_PART);
-        var model = new Light();
-        model.bridge = bridge;
-        ajax.exec({
-            url: url,
-            model: model,
-            success: _lights
-        });
+//     var getAllGroups = function(bridge) {
+//         var url = bridge.assembleUrl(LIGHTS_URL_PART);
+//         var model = new Light();
+//         model.bridge = bridge;
+//         zue_core.ajaxExec({
+//             url: url,
+//             model: model,
+//             success: _lights
+//         });
+//     }
+
+    var getAllGroups;
+    
+    var addGroup = function(group) {
+        zue_core.triggerEvent(GROUP_ADDED, group);
+    }
+    
+    var addLightToGroup = function(group) {
+        zue_core.triggerEvent(GROUP_LIGHT_ADDED, group);
     }
     
     return {
         useSoftGroups: useSoftGroups,
         getAllGroups: getAllGroups,
-        
-        GROUP_ADDED: GROUP_ADDED,
-        GROUP_LIGHT_ADDED: GROUP_LIGHT_ADDED,
-        GROUP_UPDATED: GROUP_UPDATED,
-        GROUP_UPDATING: GROUP_UPDATING
+        enableGroupImplementation: enableGroupImplementation,
+        addGroup: addGroup,
+        addLightToGroup: addLightToGroup,
     }
 };
 
-zue.core.attach('groups', _groupsZueModule);
+zue.attach('groups', _groupsZueModule);

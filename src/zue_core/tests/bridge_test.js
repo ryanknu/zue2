@@ -28,7 +28,6 @@ test('#b02 Locate Test', function() {
             var s = ajm.success;
             var f = ajm.failure;
             ok(url === 'https://www.meethue.com/api/nupnp', 'Discovery URL is ok');
-            ok(obj.hue_username === zue.core.getHueUser(), 'Hue user is defined on the bridge object');
             ok(typeof obj.assembleUrl === 'function', 'Object prototype implements assembleUrl');
             ok(typeof obj.exchangeData === 'function', 'Object prototype implements exchangeData');
             ok(typeof s === 'function', ':success is a function');

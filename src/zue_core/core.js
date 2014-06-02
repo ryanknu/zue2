@@ -12,177 +12,101 @@
  *
  */
 
+var HUE_ERROR = 'core.hue_error';
+var ERR_UNAUTHORIZED = 1;
+var ERR_LINK_BUTTON_NOT_PRESSED = 101;
 
-(function() {
-    'use strict';
+var LIGHT_ADDED = 'lights.light_added';
+var LIGHT_UPDATING = 'lights.light_updating';
+var LIGHT_UPDATED = 'lights.light_updated';
+var GROUP_ADDED = 'groups.group_added';
+var GROUP_LIGHT_ADDED = 'groups.light_added';
+var GROUP_UPDATING = 'groups.group_updating';
+var GROUP_UPDATED = 'groups.group_updated';
+var BRIDGE_FOUND = 'bridge.bridge_found';
+var NO_BRIDGE_FOUND = 'bridge.no_bridge_found';
+var LINK_SUCCESS = 'config.link_success';
+var LINK_FAILURE = 'config.link_failure';
+var LINK_BEGIN = 'config.link_begin';
+var LINKED = 'config.linked';
+
+
+var detectArray = function(o) {
+    if ( o !== undefined && !!o.shift ) {
+        return true;
+    }
     
-    var bridge;
-    var user;
-    var HUE_ERROR = 'core.hue_error';
-    var ERR_UNAUTHORIZED = 1;
-    var ERR_LINK_BUTTON_NOT_PRESSED = 101;
-    var triggers = 0;
+    // RK: we now need to try to detect 1-based arrays, which is irritating. 
+    if ( typeof o !== 'object' ) {
+        return false;
+    }
     
-    var log = function(msg) {
-        if ( $('#zue-debug').length ) {
-            $('#zue-debug').prepend($('<div/>').text( triggers++ + ' ' + msg));
-        }
-    };
-    
-    var em = {
-        o: {},
-        /**
-         * @test: none
-         */
-        attach: function(event, callback) {
-            if ( this.o[event] === undefined ) {
-                this.o[event] = [];
-            }
-            this.o[event].push(callback);
-        },
-        /**
-         * @test: none
-         */
-        trigger: function(event, argument) {
-            log('event: ' + event + ' Arg: ' + JSON.stringify(argument));
-            if ( detectArray(this.o[event]) ) {
-                for ( var i = 0; i < this.o[event].length; i++ ) {
-                    this.o[event][i](argument);
-                }
+    var any_keys = false;
+    for( var y in o) {
+        if ( o.hasOwnProperty(y) ) {
+            any_keys = true;
+            if ( isNaN(parseInt(y, 10)) ) {
+                return false;
             }
         }
-    };
-    
-    var ajax = {
-        _defaults: {
-            method:'get',
-            data: '',
-            url: undefined,
-            model: undefined,
-            success: function() {},
-            failure: function() {}
-        },
-        
-        /**
-         * @test: none
-         */
-        exec: function(_options) {
-            var options = $.extend( {}, this._defaults, _options );
-            log('ajax:  ' + options.method + ' ' + options.url);
-            var ajaxOptions = {
-                type: options.method,
-                url: options.url,
-                success: function(data) {
-                    if ( detectArray(data) ) {
-                        if ( data.length == 0 ) {
-                            em.trigger(HUE_ERROR, { type: 10001, description: 'empty result set' });
-                        }
-                        for ( var i in data ) {
-                            if ( data.hasOwnProperty(i) ) {
-                                data[i]._i = i;
-                                if ( 'error' in data[i] ) {
-                                    em.trigger(HUE_ERROR, data[i].error);
-                                    options.failure();
-                                }
-                                else {
-                                    var _o = $.extend(true, {}, options.model);
-                                    _o.exchangeData(data[i]);
-                                    options.success(_o);
-                                }
-                            }
-                        }
-                    }
-                    else if ( typeof data === 'object' ) {
-                        if ( 'error' in data ) {
-                            em.trigger(HUE_ERROR, data.error);
-                        }
-                        else {
-                            options.model.exchangeData(data);
-                            options.success(options.model);
-                        }
-                    }
-                    else {
-                        throw '`data` is not something I can work with';
-                    }
-                },
-                error: function() {
-                    em.trigger(HUE_ERROR, { type: 10000, description: 'no/bad response from server' });
-                    options.failure();
-                }
-            };
-            if ( options.method == 'post' || options.method == 'put' ) {
-                ajaxOptions.data = JSON.stringify(options.data);
-            }
-            $.ajax(ajaxOptions);
-        }
-    };
-    
-    var detectArray = function(o) {
-        // return o !== undefined && !!o.shift;
-        // RK: we need to detect 1-based arrays, which is irritating. 
-        var any_keys = false;
-        for( var y in o) {
-            if ( o.hasOwnProperty(y) ) {
-                any_keys = true;
-                if ( isNaN(parseInt(y, 10)) ) {
-                    return false;
-                }
-            }
-        }
-        return any_keys;
     }
-    
-    /**
-     * @test: none
-     */
-    var attach = function(module, o) {
-        if ( module === 'core' ) {
-            throw 'Cannot extend or modify zue core';
-        }
-        window.zue[module] = o(ajax, em);
+    return any_keys;
+}
+
+function ZueCore(IAjax, IEventManager)
+{
+    this.modules = {};
+    this.plugins = {};
+    this.IAjax = IAjax;
+    this.IAjax.setEventManager(IEventManager);
+    this.IEventManager = IEventManager;
+    this.log_target = '#zue-debug';
+    this.triggers = 0;
+}
+
+ZueCore.prototype.log = function(msg)
+{
+    if ( $(this.log_target).length ) {
+        $(this.log_target).prepend($('<div/>').text( this.triggers++ + ' ' + msg));
     }
-    
-    var getVersion = function() {
-        return 'zue_0_2';
-    }
-    
-    var getHueUser = function() {
-        return user;
-    }
-    
-    var setHueUser = function(_user) {
-        user = _user;
-    }
-    
-    var setBridge = function(_bridge) {
-        bridge = _bridge;
-    }
-    
-    var getBridge = function() {
-        return bridge;
-    }
-    
-    /**
-     * @test: none
-     */
-    var listenFor = function(event, listener) {
-        em.attach(event, listener);
-    }
-    
-    window.zue = {
-        core: {
-            attach: attach,
-            getVersion: getVersion,
-            listenFor: listenFor,
-            setBridge: setBridge,
-            getBridge: getBridge,
-            setHueUser: setHueUser,
-            getHueUser: getHueUser,
-            
-            HUE_ERROR: HUE_ERROR,
-            ERR_UNAUTHORIZED: ERR_UNAUTHORIZED,
-            ERR_LINK_BUTTON_NOT_PRESSED: ERR_LINK_BUTTON_NOT_PRESSED
-        }
-    };
-    
-})();
+}
+
+ZueCore.prototype.attach = function(module, o)
+{
+    this.modules[module] = o(this);
+    this[module] = this.modules[module];
+}
+
+ZueCore.prototype.enablePlugin = function(name)
+{
+    this.plugins[name].start(this);
+}
+
+ZueCore.prototype.registerPlugin = function(name, plugin)
+{
+    this.plugins[name] = plugin;
+}
+
+ZueCore.prototype.triggerEvent = function(event, argument, object)
+{
+    this.log('event: ' + event + ' Arg: ' + JSON.stringify(argument));
+    this.IEventManager.trigger(event, argument, object);
+}
+
+ZueCore.prototype.listenFor = function(event, listener, object)
+{
+    this.IEventManager.attach(event, listener, object);
+}
+
+ZueCore.prototype.on = function(event, listener, object)
+{
+    this.listenFor(event, listener, object);
+}
+
+ZueCore.prototype.ajaxExec = function(options)
+{
+    this.log('ajax:  ' + options.method + ' ' + options.url);
+    this.IAjax.exec(options);
+}
+
+window.zue = new ZueCore(new ZueAjax(), new ZueEventManager());

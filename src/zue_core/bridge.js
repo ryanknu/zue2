@@ -48,17 +48,15 @@ Bridge.prototype.assembleRootUrl = function() {
     return this.protocol + '://' + this.internalipaddress + this.URL_API_PART;
 };
 
-var _bridgeZueModule = function(ajax, event_manager) {
+var _bridgeZueModule = function(zue_core) {
     'use strict';
     var PORTAL_LOCAL_DISCOVERY_URL = 'https://www.meethue.com/api/nupnp';
-    var BRIDGE_FOUND = 'bridge.found';
-    var NO_BRIDGE_FOUND = 'bridge.not_found';
     
     /**
      * @test: #b03
      */
     var foundBridge = function(bridge) {
-        event_manager.trigger(BRIDGE_FOUND, bridge);
+        zue_core.triggerEvent(BRIDGE_FOUND, bridge);
         return '_bridgeZueModule.foundBridge';
     };
     
@@ -66,7 +64,7 @@ var _bridgeZueModule = function(ajax, event_manager) {
      * @test: #b04
      */
     var noBridgeFound = function() {
-        event_manager.trigger(NO_BRIDGE_FOUND);
+        zue_core.triggerEvent(NO_BRIDGE_FOUND);
         return '_bridgeZueModule.noBridgeFound';
     }
     
@@ -76,7 +74,7 @@ var _bridgeZueModule = function(ajax, event_manager) {
     var locate = function()
     {
         var bridge = new Bridge();
-        bridge = ajax.exec({
+        bridge = zue_core.ajaxExec({
             url: PORTAL_LOCAL_DISCOVERY_URL,
             model: bridge,
             success: foundBridge,
@@ -87,10 +85,6 @@ var _bridgeZueModule = function(ajax, event_manager) {
     return {
         locate: locate,
         
-        /* constants */
-        BRIDGE_FOUND: BRIDGE_FOUND,
-        NO_BRIDGE_FOUND: NO_BRIDGE_FOUND,
-        
         /* Private members here for testing */
         _foundBridge: foundBridge,
         _noBridgeFound: noBridgeFound
@@ -100,4 +94,4 @@ var _bridgeZueModule = function(ajax, event_manager) {
 /**
  * @test: #b01
  */
-zue.core.attach('bridge', _bridgeZueModule);
+zue.attach('bridge', _bridgeZueModule);
