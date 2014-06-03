@@ -1,5 +1,15 @@
 
-// initialize Hoodie
+/**
+ * Before moving any objects that match these selectors, find them in the javascript to 
+ * see how it might affect the code.
+ * Important CSS Selectors:
+ * #lights li[light-id]
+ * #link-section input[type=button]
+ * #bridges
+ * #no-bridge
+ * #hue-exception
+ */
+
 var hoodie  = new Hoodie()
 
 hoodie.store.findAll('bridge').then( function(bridges) {
@@ -15,17 +25,6 @@ hoodie.store.findAll('bridge').then( function(bridges) {
         gotABridge(b);
     }
 });
-
-// initial load of all todo items from the store
-// hoodie.store.findAll('todo').then( function(todos) {
-//   todos.sort( sortByCreatedAt ).forEach( addTodo )
-// })
-
-// clear todo list when the get wiped from store
-//hoodie.account.on('signout', clearTodos)
-
-
-// begin ZUE UI code here
 
 var createUser = function(bridge) {
     zue.config.createAnonUser(bridge, 'web application');
