@@ -12,7 +12,7 @@ hoodie.store.findAll('bridge').then( function(bridges) {
     for( var i = 0; i < bridges.length; i++ ) {
         var b = new Bridge();
         b.exchangeData(bridges[i]);
-        zue.lights.getAllLights(b);
+        gotABridge(b);
     }
 });
 
@@ -27,29 +27,8 @@ hoodie.store.findAll('bridge').then( function(bridges) {
 
 // begin ZUE UI code here
 
-$('#link-button').on('click', function() {
-    if ( bridge !== undefined ) {
-        if ( ! linking ) {
-            linking = true;
-            $(this).val('cancel');
-            createUser();
-        }
-        else {
-            linking = false;
-            $(this).val('link');
-        }
-    }
-    else {
-        alert('no bridge found');
-    }
-})
-.hide();
-
-var linking = false;
-var app = 'california';
-
-var createUser = function() {
-    zue.config.createUser(bridge, 'web application', app);
+var createUser = function(bridge) {
+    zue.config.createAnonUser(bridge, 'web application');
 }
 
 // RK: function copies light into DOM for future use, any resource that returns a Light
@@ -58,11 +37,38 @@ function saveLight(light) {
     $('#lights').find('li[light-id=' + light.id + ']').data('light', light).find('span').text(light.name + light.state.hue);
 }
 
+function createLinkButton(bridge) {
+    var s = $('#link-section').clone();
+    s.find('input[type=button]')
+        .attr('mac', bridge.macaddress)
+        .val( 'Link ' + bridge.macaddress )
+        .data('bridge', bridge)
+        .on('click', function() {
+            var b = $(this).data('bridge');
+            if ( !b.linking ) {
+                b.linking = true;
+                $(this).val( 'Cancel ' + b.macaddress);
+                createUser(b);
+            }
+            else {
+                b.linking = false;
+                $(this).val( 'Link ' + b.macaddress);
+            }
+        });
+    $('.content').prepend(s);
+    s.fadeIn();
+}
+
 // RK: function gets the light out of DOM for any given element by looking up to it's 
 //     closest parent that would have a light. Convenient for triggers nested underneath
 //     a DOM object encapsulating a light.
 function getLight(element) {
     return $(element).closest('li[light-id]').data('light');
+}
+
+function gotABridge(bridge) {
+    $('#bridges').append($('<li/>').text(bridge.macaddress));
+    zue.lights.getAllLights(bridge);
 }
 
 function hoodieStore(bridge) {
@@ -78,7 +84,14 @@ zue.enablePlugin('SimulateGroupsByNames');
 
 zue.on(HUE_ERROR, function(err) {
     if ( err.type == ERR_UNAUTHORIZED ) {
-        $('#link-button').show();
+        createLinkButton(err.bridge);
+    }
+    else if ( err.type == ERR_LINK_BUTTON_NOT_PRESSED ) {
+        if ( err.bridge.linking ) {
+            setTimeout(function() {
+                createUser(err.bridge)
+            }, 5000);
+        }
     }
     else {
         $('#hue-exception').modal();
@@ -86,9 +99,8 @@ zue.on(HUE_ERROR, function(err) {
 });
 
 zue.on(BRIDGE_FOUND, function(bridge) {
-    bridge.hue_username = app;
     hoodieStore(bridge);
-    zue.lights.getAllLights(bridge);
+    gotABridge(bridge);
 });
 
 zue.on(LIGHT_ADDED, function(light) {
@@ -127,16 +139,14 @@ zue.on(GROUP_ADDED, function(group) {
     $('#lights').append($('<li/>').text('GROUP: ' + group.name));
 });
 
-
-zue.on(LINK_FAILURE, function(user) {
-    if ( linking ) {
-        setTimeout(createUser, 5000);
-    }
-});
-
-zue.on(LINK_SUCCESS, function(bridge) {
+zue.on(LINKED, function(bridge) {
+    $('input[type=button]').each(function() {
+        if ( $(this).attr('mac') == bridge.macaddress ) {
+            $(this).parent().remove();
+        }
+    });
     hoodieStore(bridge);
-    zue.lights.getAllLights(bridge);
+    gotABridge(bridge);
 });
 
 zue.on(NO_BRIDGE_FOUND, function() {

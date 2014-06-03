@@ -21,6 +21,7 @@ function Bridge() {
     this.protocol = 'http';
     this.URL_API_PART = '/api';
     this.error = '';
+    this.linking = false;
 }
 
 /**

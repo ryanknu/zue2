@@ -12,74 +12,28 @@
  *
  */
 
-function Light()
+function Schedule()
 {
     this.id = '';
     this.name = '';
-    this.simple = true;
-    this.state = {
-        on: false,
-        bri: 0,
-        hue: 0,
-        sat: 0,
-        xy: [ 0, 0 ],
-        alert: 'none',
-        effect: 'none',
-        colormode: 'hs',
-        reachable: true
-    };
-    this.type = '';
-    this.modelid = '';
-    this.swversion = '';
-    this.pointsymbol = {};
-    this.bridge = undefined;
+    this.description = '';
+    this.command = {};
+    this.time = '';
 }
 
-Light.prototype.exchangeData = function(data) {
-    if ( '_i' in data && !this.id ) this.id = data._i;
-    this.name = data.name || '';
-    this.simple = !('state' in data);
-    if ( !this.simple ) {
-        this.state = data.state;
-        this.type = data.type;
-        this.modelid = data.modelid;
-        this.swversion = data.swversion;
-        this.pointsymbol = data.pointsymbol;
-    }
-}
-
-Light.prototype.toggle = function() {
-    zue.lights.updateLightState(this, {on: !this.state.on});
-}
-
-Light.prototype.setHue = function(hue) {
-    zue.lights.updateLightState(this, {hue: hue });
-}
-
-Light.prototype.setBri = function(bri) {
-    zue.lights.updateLightState(this, { bri: bri });
-}
-
-Light.prototype.setSat = function(sat) {
-    zue.lights.updateLightState(this, { sat: sat });
-}
-
-function LightUpdateResponse()
+Schedule.prototype.exchangeData( data )
 {
-    this.light = '';
-    this.status = 'failure';
+    this.id = data._id;
+    this.name = data.name
+    this.description = data.description || '';
+    this.command = data.command || {};
+    this.time = data.time || '';
 }
 
-LightUpdateResponse.prototype.exchangeData = function(data) {
-    if ( 'success' in data ) {
-        this.status = 'success';
-    }
-};
-
-var _lightsZueModule = function(zue_core) {
+var _schedZueModule = function(zue_core) {
     'use strict';
     
-    var LIGHTS_URL_PART = '/lights';
+    var LIGHTS_URL_PART = '/schedules';
     var STATE_URL_PART = '/state';
     
     var _lights = function(light) {
@@ -110,8 +64,7 @@ var _lightsZueModule = function(zue_core) {
         zue_core.ajaxExec({
             url: url,
             model: model,
-            success: _lights,
-            bridge: bridge
+            success: _lights
         });
     }
     
@@ -138,11 +91,16 @@ var _lightsZueModule = function(zue_core) {
         });
     }
     
+    var getAllSchedules = function()
+    {
+        
+    }
+    
     return {
-        getAllLights: getAllLights,
+        getAllSchedules: getAllSchedules,
         getLightDetails: getLightDetails,
         updateLightState: updateLightState,
     }
 };
 
-zue.attach('lights', _lightsZueModule);
+zue.attach('schedules', _schedZueModule);

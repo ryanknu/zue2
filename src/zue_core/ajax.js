@@ -22,7 +22,8 @@ function ZueAjax()
         model: undefined,
         success: function() {},
         failure: function() {},
-        trap: false
+        trap: false,
+        bridge: undefined
     };
     this.$ = jQuery;
 }
@@ -35,7 +36,7 @@ ZueAjax.prototype.setEventManager = function(em)
 ZueAjax.prototype.exec = function(in_options)
 {
     var $ = this.$;
-    var options = $.extend( {}, this._defaults, in_options );
+    var options = $.extend( {}, this.defaults, in_options );
     var em = this.eventManager;
     var ajaxOptions = {
         type: options.method,
@@ -44,7 +45,7 @@ ZueAjax.prototype.exec = function(in_options)
             if ( detectArray(data) ) {
                 if ( data.length == 0 ) {
                     if ( !options.trap ) {
-                        em.trigger(HUE_ERROR, { type: 10001, description: 'empty result set' });
+                        em.trigger(HUE_ERROR, { brige: options.bridge, type: 10001, description: 'empty result set' });
                     }
                     options.failure();
                 }
@@ -53,7 +54,9 @@ ZueAjax.prototype.exec = function(in_options)
                         data[i]._i = i;
                         if ( 'error' in data[i] ) {
                             if ( !options.trap ) {
-                                em.trigger(HUE_ERROR, data[i].error);
+                                var e = data[i].error;
+                                e.bridge = options.bridge;
+                                em.trigger(HUE_ERROR, e);
                             }
                             options.failure();
                         }
@@ -68,7 +71,9 @@ ZueAjax.prototype.exec = function(in_options)
             else if ( typeof data === 'object' ) {
                 if ( 'error' in data ) {
                     if ( !options.trap ) {
-                        em.trigger(HUE_ERROR, data.error);
+                        var e = data.error;
+                        e.bridge = options.bridge;
+                        em.trigger(HUE_ERROR, e);
                     }
                     options.failure();
                 }
@@ -83,7 +88,7 @@ ZueAjax.prototype.exec = function(in_options)
         },
         error: function() {
             if ( !options.trap ) {
-                em.trigger(HUE_ERROR, { type: 10000, description: 'no/bad response from server' });
+                em.trigger(HUE_ERROR, { bridge: options.bridge, type: 10000, description: 'no/bad response from server' });
             }
             options.failure();
         }

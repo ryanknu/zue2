@@ -23,17 +23,18 @@ var _configZueModule = function(zue_core) {
     var settings = {};
     
     var userCreated = function(bridge) {
-        event_manager.trigger(LINKED, bridge);
+        zue_core.triggerEvent(LINKED, bridge);
     }
     
     var _createUser = function(bridge, request) {
-        event_manager.trigger(LINK_BEGIN, bridge);
-        ajax.exec({
+        zue_core.triggerEvent(LINK_BEGIN, bridge);
+        zue_core.ajaxExec({
             url: bridge.assembleRootUrl(),
-            type: 'post',
+            method: 'post',
             data: request,
             model: bridge,
-            success: userCreated
+            success: userCreated,
+            bridge: bridge
         });
     }
     
