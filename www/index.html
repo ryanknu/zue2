@@ -7,23 +7,54 @@
     <meta name="description" content="">
     <meta name="viewport" content="width=device-width">
 
-    <link rel="stylesheet" href="assets/vendor/bootstrap/bootstrap.min.css">
-    <link rel="stylesheet" href="assets/vendor/prism/prism.css">
+    <link rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap.min.css">
+    <!--<link rel="stylesheet" href="assets/vendor/prism/prism.css">-->
     <link rel="stylesheet" href="assets/css/main.css">
     
     <style>
+        #ILightControl,#IBridgeControl { display: none; }
+        
         li.updating {
             font-weight: bold;
         }
+        
+        .indicator-working {
+            height: 20px;
+            width: 20px;
+            display: none;
+        }
+        
+        .working .indicator-working {
+            display: inline-block;
+        }
+        
+        img { height: 100%; }
     </style>
   </head>
   <body>
+    
+    <div class="modal fade" id="bridge-config">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+            <h4 class="modal-title">Bridge <span class="macaddress">#mac</span></h4>
+          </div>
+          <div class="modal-body">
+            <p>IP Address <input type="text" class="internalipaddress" /></p>
+            <p>One fine body&hellip;</p>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            <button type="button" class="btn btn-primary">Save changes</button>
+          </div>
+        </div><!-- /.modal-content -->
+      </div><!-- /.modal-dialog -->
+    </div><!-- /.modal -->
+    
     <div class="container">
       <div class="hero-unit">
-        <h1>zue2</h1>
-        <p>
-          hoodie playground.
-        </p>
+        <h1>zue or something</h1>
         
         <div id="hue-exception" class="modal hide fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
           <div class="modal-header">
@@ -102,30 +133,50 @@
             <input type="button" value="link" id="link-button" />
         </div>
         <b>Lights &amp; Groups</b>
-        <ul id="lights"></ul>
+        <div id="ILightControl" class="ILightControl">
+            <span class="indicator-working"><img src="https://www.schoolpay.com/img/loading.gif" /></span>
+            <p>
+                <span class="name">#name</span>
+            </p>
+            <p class="no-group">
+                <span class="state_on"></span>
+                <span class="state_hue"></span>
+            </p>
+            <p>
+                <a class="setHue">Set Hue</a>
+                |
+                <a class="toggle">Toggle</a>
+            </p>
+            <hr />
+            
+        </div>
+        <div id="lights"></div>
         <b>Bridges</b>
-        <ul id="bridges"></ul>
+        <div id="IBridgeControl" class="IBridgeControl">
+            <span class="indicator-working"><img src="https://www.schoolpay.com/img/loading.gif" /></span>
+            <span class="macaddress">#mac</span>
+            <a class="configure">config</a>
+        </div>
+        <div id="bridges"></div>
         <input type="button" value="clear debug" onclick="$('#zue-debug').html('');" />
         <!-- /zue area -->
-        
-        <ul id="todolist"></ul>
-
-        <input type="text" id="todoinput"  placeholder="new todo ↵" />
       </div>
 
       <div class="code">
 <pre class="language-javascript"><code class="language-javascript" id="zue-debug">
 </code></pre>
       </div><!-- /.code -->
+      
+      <div class="clearfix"></div>
 
       <footer class="copy">
         <p>&hearts; hood.ie 2014</p>
       </footer>
     </div> <!-- /.container -->
 
-    <script src="assets/vendor/jquery-2.1.0.min.js"></script>
-    <script src="assets/vendor/bootstrap/bootstrap.js"></script>
-    <script src="assets/vendor/prism/prism.js"></script>
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
+    <script src="//netdna.bootstrapcdn.com/bootstrap/3.1.1/js/bootstrap.min.js"></script>
+    <!--<script src="assets/vendor/prism/prism.js"></script>-->
     <!-- Load the dynamic version of hoodie.js that includes all the plugin code-->
     <script src="/_api/_files/hoodie.js"></script>
 

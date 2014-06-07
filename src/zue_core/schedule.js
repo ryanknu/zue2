@@ -91,9 +91,11 @@ var _schedZueModule = function(zue_core) {
         });
     }
     
-    var getAllSchedules = function()
+    var getAllSchedules = function(bridge)
     {
-        
+        zue_core.ajaxExec({
+            bridge.
+        });
     }
     
     return {

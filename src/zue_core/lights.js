@@ -64,6 +64,10 @@ Light.prototype.setSat = function(sat) {
     zue.lights.updateLightState(this, { sat: sat });
 }
 
+Light.prototype.getId = function() {
+    return 'light-' + this.id;
+}
+
 function LightUpdateResponse()
 {
     this.light = '';

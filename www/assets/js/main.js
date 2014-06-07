@@ -22,9 +22,16 @@ hoodie.store.findAll('bridge').then( function(bridges) {
     for( var i = 0; i < bridges.length; i++ ) {
         var b = new Bridge();
         b.exchangeData(bridges[i]);
-        gotABridge(b);
+        getAllLights(b);
     }
 });
+
+var sortGroups = function() {
+    var d = '#lights';
+    $(d + ' > div').sort(function(a, b) {
+        return ( $(a).data('model').type === 'group' ) ? -1 : 1;
+    }).appendTo($(d));
+}
 
 var createUser = function(bridge) {
     zue.config.createAnonUser(bridge, 'web application');
@@ -33,7 +40,18 @@ var createUser = function(bridge) {
 // RK: function copies light into DOM for future use, any resource that returns a Light
 //     should probably call this function.
 function saveLight(light) {
-    $('#lights').find('li[light-id=' + light.id + ']').data('light', light).find('span').text(light.name + light.state.hue);
+    $('#' + light.getId())
+        .data('model', light)
+        .find('.name')
+            .text(light.name)
+        .end()
+        .find('.state_on')
+            .text(light.state.on ? 'ON' : 'OFF')
+        .end()
+        .find('.state_hue')
+            .text(light.state.hue)
+        .end();
+    sortGroups();
 }
 
 function createLinkButton(bridge) {
@@ -62,12 +80,31 @@ function createLinkButton(bridge) {
 //     closest parent that would have a light. Convenient for triggers nested underneath
 //     a DOM object encapsulating a light.
 function getLight(element) {
-    return $(element).closest('li[light-id]').data('light');
+    return $(element).closest('.ILightControl').data('model');
 }
 
-function gotABridge(bridge) {
-    $('#bridges').append($('<li/>').text(bridge.macaddress));
+// RK: returns a CSS selector-safe mac address
+function safeMacAddress(mac_address)
+{
+    return mac_address.replace(/:/g, '');
+}
+
+function getAllLights(bridge) {
+    poopulate('#IBridgeControl', '#bridges', bridge)
+        .attr('mac-safe', safeMacAddress(bridge.macaddress))
+        .addClass('working')
+        .find('a.configure')
+            .on('click', function() {
+                var bridge = $(this).closest('.IBridgeControl').data('model');
+                poopulate('#bridge-config', 'body', bridge)
+                    .modal();
+            })
+        .end();
     zue.lights.getAllLights(bridge);
+}
+
+function stopWorking(bridge) {
+    $('.IBridgeControl[mac-safe=' + safeMacAddress(bridge.macaddress) + ']').removeClass('working');
 }
 
 function hoodieStore(bridge) {
@@ -76,6 +113,28 @@ function hoodieStore(bridge) {
         .done(function(o) {
             console.log('added: ' + JSON.stringify(o));
         });;
+}
+
+function poopulate(template, bucket, model)
+{
+    var cl = $(template).clone();
+    cl.attr('id', '').data('model', model);
+    for ( i in model ) {
+        if ( typeof model[i] === 'function' ) {
+            continue;
+        }
+        var o = cl.find('.' + i);
+        o.each(function() {
+            if ( $(this).is('input') ) {
+                $(this).val( model[i] );
+            }
+            else {
+                $(this).text( model[i] );
+            }
+        });
+    }
+    $(bucket).append(cl);
+    return cl;
 }
 
 // RK: Enable the name-based group simulator
@@ -99,22 +158,25 @@ zue.on(HUE_ERROR, function(err) {
 
 zue.on(BRIDGE_FOUND, function(bridge) {
     hoodieStore(bridge);
-    gotABridge(bridge);
+    getAllLights(bridge);
 });
 
 zue.on(LIGHT_ADDED, function(light) {
-    if ( $('#lights').find('li[light-id=' + light.id + ']').length < 1 ) {
-        $lightLI = $('<li/>')
-            .attr('light-id', light.id)
-            .html( '<span>' + light.name + '</span><a>ON</a>')
-            .data('light', light)
-            .find('a')
+    stopWorking(light.bridge);
+    if ( $('#' + light.getId()).length < 1 ) {
+        poopulate('#ILightControl', '#lights', light)
+            .attr('id', light.getId())
+            .find('.toggle')
+                .on('click', function() {
+                    getLight(this).toggle();
+                })
+            .end()
+            .find('.setHue')
                 .on('click', function() {
                     getLight(this).setHue(parseInt(prompt('hue'),10));
                 })
             .end();
-        $('#lights').append($lightLI);
-        $lightLI = '';
+            
         if ( light.simple ) {
             zue.lights.getLightDetails(light);
         }
@@ -133,9 +195,9 @@ zue.on(LIGHT_UPDATED, function(light) {
     saveLight(light);
 });
 
-//zue.addPlugin(new GroupNameImplementation());
 zue.on(GROUP_ADDED, function(group) {
-    $('#lights').append($('<li/>').text('GROUP: ' + group.name));
+    poopulate('#ILightControl', '#lights', group)
+        .find('no-group').hide();
 });
 
 zue.on(LINKED, function(bridge) {
@@ -145,7 +207,7 @@ zue.on(LINKED, function(bridge) {
         }
     });
     hoodieStore(bridge);
-    gotABridge(bridge);
+    getAllLights(bridge);
 });
 
 zue.on(NO_BRIDGE_FOUND, function() {

@@ -18,6 +18,7 @@ function Group()
     this.name = '';
     this.lights = [];
     this.bridge = undefined;
+    this.type = 'group';
 }
 
 Group.prototype.addLight = function(light)
@@ -30,6 +31,11 @@ Group.prototype.toggle = function()
     for ( var i = 0; i < this.lights.length; i++ ) {
         this.lights[i].toggle();
     }
+}
+
+Group.prototype.getId = function()
+{
+    return 'group-' + this.id;
 }
 
 var _groupsZueModule = function(zue_core) {
