@@ -41,6 +41,7 @@ ZueAjax.prototype.exec = function(in_options)
     var ajaxOptions = {
         type: options.method,
         url: options.url,
+        async: false,
         success: function(data) {
             if ( detectArray(data) ) {
                 if ( data.length == 0 ) {

@@ -35,7 +35,7 @@ Group.prototype.toggle = function()
 
 Group.prototype.getId = function()
 {
-    return 'group-' + this.id;
+    return 'group-' + this.bridge.getSafeMacAddress() + '-'  + this.id;
 }
 
 var _groupsZueModule = function(zue_core) {
@@ -74,19 +74,6 @@ var _groupsZueModule = function(zue_core) {
         zue_core.triggerEvent(GROUP_LIGHT_ADDED, group);
     }
     
-    var enableGroupImplementation = function(group_impl) {
-        if ( group_impl === GROUP_IMPL_NAME ) {
-            new GroupNameImplementation();
-        }
-    };
-
-    var useSoftGroups = function(soft_groups) {
-        use_soft_groups = soft_groups;
-        if ( use_soft_groups ) {
-            zue_core.on(LIGHT_ADDED, softLightAdded);
-        }
-    };
-    
 //     var getAllGroups = function(bridge) {
 //         var url = bridge.assembleUrl(LIGHTS_URL_PART);
 //         var model = new Light();
@@ -109,9 +96,7 @@ var _groupsZueModule = function(zue_core) {
     }
     
     return {
-        useSoftGroups: useSoftGroups,
         getAllGroups: getAllGroups,
-        enableGroupImplementation: enableGroupImplementation,
         addGroup: addGroup,
         addLightToGroup: addLightToGroup,
     }

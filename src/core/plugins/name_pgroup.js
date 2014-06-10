@@ -24,7 +24,7 @@ GroupNameImplementation.prototype.start = function(zue_core)
     this.zue_core.listenFor(LIGHT_ADDED, this.lightAdded, this);
 }
 
-GroupNameImplementation.prototype.getAGroup = function(group_name)
+GroupNameImplementation.prototype.getAGroup = function(group_name, bridge)
 {
     for ( var i = 0; i < this.all_groups.length; i++ ) {
         if ( this.all_groups[i].name == group_name ) {
@@ -32,7 +32,10 @@ GroupNameImplementation.prototype.getAGroup = function(group_name)
         }
     }
     var g = new Group();
+    g.impl = 'impl_name';
     g.name = group_name;
+    g.id = group_name;
+    g.bridge = bridge;
     this.all_groups.push(g);
     zue.groups.addGroup(g);
     return g;
@@ -46,7 +49,7 @@ GroupNameImplementation.prototype.lightAdded = function(light)
     if ( parts.length > 1 ) {
         group_name = parts[0];
     }
-    var group = this.getAGroup(group_name);
+    var group = this.getAGroup(group_name, light.bridge);
     group.addLight(light);
     zue.groups.addLightToGroup(group);
 }

@@ -23,6 +23,7 @@ var GROUP_ADDED = 'groups.group_added';
 var GROUP_LIGHT_ADDED = 'groups.light_added';
 var GROUP_UPDATING = 'groups.group_updating';
 var GROUP_UPDATED = 'groups.group_updated';
+var SCHEDULE_ADDED = 'schedules.schedule_added';
 var BRIDGE_FOUND = 'bridge.bridge_found';
 var NO_BRIDGE_FOUND = 'bridge.no_bridge_found';
 var LINK_SUCCESS = 'config.link_success';
@@ -30,6 +31,13 @@ var LINK_FAILURE = 'config.link_failure';
 var LINK_BEGIN = 'config.link_begin';
 var LINKED = 'config.linked';
 
+String.prototype.pad = function(len, chr)
+{
+    var pad_len = len - this.length + 1;
+    if ( pad_len > 0 ) {
+        return Array(pad_len).join(chr) + this;
+    }
+}
 
 var detectArray = function(o) {
     if ( o !== undefined && !!o.shift ) {
@@ -62,12 +70,23 @@ function ZueCore(IAjax, IEventManager)
     this.IEventManager = IEventManager;
     this.log_target = '#zue-debug';
     this.triggers = 0;
+    this.start = 0;
 }
 
 ZueCore.prototype.log = function(msg)
 {
+    if ( !this.start ) {
+        this.start = Date.now();
+    }
+    
     if ( $(this.log_target).length ) {
-        $(this.log_target).prepend($('<div/>').text( this.triggers++ + ' ' + msg));
+        $(this.log_target).prepend($('<div/>').text(
+            (this.triggers++).toString().pad(3, '0') +
+            ' (T+' +
+            (Date.now() - this.start).toString().pad(6, '0') + 
+            ') ' + 
+            msg)
+        );
     }
 }
 
@@ -105,7 +124,7 @@ ZueCore.prototype.on = function(event, listener, object)
 
 ZueCore.prototype.ajaxExec = function(options)
 {
-    this.log('ajax:  ' + options.method + ' ' + options.url);
+    this.log('ajax:  ' + (options.method || 'get') + ' ' + options.url);
     this.IAjax.exec(options);
 }
 

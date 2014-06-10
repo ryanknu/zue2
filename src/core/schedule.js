@@ -19,13 +19,15 @@ function Schedule()
     this.description = '';
     this.command = {};
     this.time = '';
+    this.simple = true;
 }
 
-Schedule.prototype.exchangeData( data )
+Schedule.prototype.exchangeData = function(data)
 {
-    this.id = data._id;
+    this.id = data._i;
     this.name = data.name
     this.description = data.description || '';
+    this.simple = this.description.length < 1;
     this.command = data.command || {};
     this.time = data.time || '';
 }
@@ -33,7 +35,7 @@ Schedule.prototype.exchangeData( data )
 var _schedZueModule = function(zue_core) {
     'use strict';
     
-    var LIGHTS_URL_PART = '/schedules';
+    var SCHEDULES_URL_PART = '/schedules';
     var STATE_URL_PART = '/state';
     
     var _lights = function(light) {
@@ -78,7 +80,7 @@ var _schedZueModule = function(zue_core) {
     }
     
     var updateLightState = function(light, state) {
-        var url = light.bridge.assembleUrl(LIGHTS_URL_PART + '/' + light.id + STATE_URL_PART );
+        var url = light.bridge.assembleUrl(SCHEDULES_URL_PART + '/' + light.id + STATE_URL_PART );
         var model = new LightUpdateResponse();
         model.light = light;
         zue_core.triggerEvent(LIGHT_UPDATING, light);
@@ -91,10 +93,17 @@ var _schedZueModule = function(zue_core) {
         });
     }
     
+    var _schedule = function(sched)
+    {
+        zue_core.triggerEvent(SCHEDULE_ADDED, sched);
+    }
+    
     var getAllSchedules = function(bridge)
     {
         zue_core.ajaxExec({
-            bridge.
+            url: bridge.assembleUrl(SCHEDULES_URL_PART),
+            model: new Schedule(),
+            success: _schedule
         });
     }
     

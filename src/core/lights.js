@@ -65,7 +65,7 @@ Light.prototype.setSat = function(sat) {
 }
 
 Light.prototype.getId = function() {
-    return 'light-' + this.id;
+    return 'light-' + this.bridge.getSafeMacAddress() + '-' + this.id;
 }
 
 function LightUpdateResponse()

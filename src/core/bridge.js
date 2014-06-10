@@ -50,6 +50,10 @@ Bridge.prototype.assembleRootUrl = function() {
     return this.protocol + '://' + this.internalipaddress + this.URL_API_PART;
 };
 
+Bridge.prototype.getSafeMacAddress = function() {
+    return this.macaddress.replace(/:/g, '');
+}
+
 var _bridgeZueModule = function(zue_core) {
     'use strict';
     var PORTAL_LOCAL_DISCOVERY_URL = 'https://www.meethue.com/api/nupnp';

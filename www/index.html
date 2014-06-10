@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html class="no-js">
+<html lang="en-us" class="no-js">
   <head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
@@ -10,29 +10,69 @@
     <link rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap.min.css">
     <!--<link rel="stylesheet" href="assets/vendor/prism/prism.css">-->
     <link rel="stylesheet" href="assets/css/main.css">
-    
+
     <style>
         #ILightControl,#IBridgeControl { display: none; }
-        
+
         li.updating {
             font-weight: bold;
         }
-        
+
         .indicator-working {
             height: 20px;
             width: 20px;
             display: none;
         }
-        
+
         .working .indicator-working {
             display: inline-block;
         }
-        
+
+        hr {
+            margin-top: 4px;
+            margin-bottom: 4px;
+        }
+
         img { height: 100%; }
+
+        .bordered { border: 1px solid #eee; }
+
+        #all-off {
+            padding: 10px;
+            text-align: center;
+        }
+
+        #content-zone {
+            min-height: 350px;
+        }
+
+        #zue-debug { white-space: nowrap; }
+
+        .vertical-center-wrapper {
+            display: table;
+            width: 100%;
+        }
+
+        .vertical-center {
+            display: table-cell;
+            text-align: center;
+            vertical-align: middle;
+        }
+
+        #nothing-selected .vertical-center-wrapper {
+            min-height: 350px;
+        }
+
+        #content-zone > div { display: none; }
+
+        #toolbar {
+            padding-right: 150px;
+            float: right;
+        }
     </style>
   </head>
   <body>
-    
+
     <div class="modal fade" id="bridge-config">
       <div class="modal-dialog">
         <div class="modal-content">
@@ -51,11 +91,16 @@
         </div><!-- /.modal-content -->
       </div><!-- /.modal-dialog -->
     </div><!-- /.modal -->
-    
+
     <div class="container">
       <div class="hero-unit">
+        <div id="toolbar">
+            <a zue href="bridge-list">Bridges</a>
+            |
+            <a zue href="debug-zone">Debug</a>
+        </div>
         <h1>zue or something</h1>
-        
+
         <div id="hue-exception" class="modal hide fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
           <div class="modal-header">
             <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
@@ -68,7 +113,7 @@
             <button class="btn btn-primary" data-dismiss="modal" aria-hidden="true">Close</button>
           </div>
         </div>
-        
+
         <div id="no-bridge" class="modal hide fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
           <div class="modal-header">
             <h3 id="myModalLabel">No bridge found</h3>
@@ -126,47 +171,69 @@
         </div><!--/hoodieAccountBar -->
       </div>
 
-      <div class="content">
-        
-        <!-- zue area -->
-        <div id="link-section" style="display:none">
-            <input type="button" value="link" id="link-button" />
-        </div>
-        <b>Lights &amp; Groups</b>
-        <div id="ILightControl" class="ILightControl">
-            <span class="indicator-working"><img src="https://www.schoolpay.com/img/loading.gif" /></span>
-            <p>
-                <span class="name">#name</span>
-            </p>
-            <p class="no-group">
-                <span class="state_on"></span>
-                <span class="state_hue"></span>
-            </p>
-            <p>
-                <a class="setHue">Set Hue</a>
-                |
-                <a class="toggle">Toggle</a>
-            </p>
-            <hr />
-            
-        </div>
-        <div id="lights"></div>
-        <b>Bridges</b>
-        <div id="IBridgeControl" class="IBridgeControl">
-            <span class="indicator-working"><img src="https://www.schoolpay.com/img/loading.gif" /></span>
-            <span class="macaddress">#mac</span>
-            <a class="configure">config</a>
-        </div>
-        <div id="bridges"></div>
-        <input type="button" value="clear debug" onclick="$('#zue-debug').html('');" />
-        <!-- /zue area -->
-      </div>
+        <div class="col-md-3">
+            <!-- zue area -->
+            <div id="link-section" style="display:none">
+                <input type="button" value="link" id="link-button" />
+            </div>
+            <div id="ILightControl" class="ILightControl">
+                <span class="indicator-working"><img src="https://www.schoolpay.com/img/loading.gif" /></span>
+                <p>
+                    <span class="name">#name</span>
+                    <span class="no-group">
+                        <span class="state_hue"></span>
+                    </span>
+                </p>
+                <p>
+                    <a class="setHue">Set Hue</a>
+                    |
+                    <a class="toggle">Toggle</a>
+                </p>
+                <hr />
 
-      <div class="code">
-<pre class="language-javascript"><code class="language-javascript" id="zue-debug">
-</code></pre>
+            </div>
+            <div id="groups"></div>
+            <div id="lights"></div>
+            <div id="all-off" class="bordered">
+                <b>All lights are powered off.</b> Hue can only work with lights that are powered on.
+            </div>
+
+            <!-- /zue area -->
+        </div>
+
+      <div class="col-md-9">
+        <div id="content-zone" class="bordered">
+
+            <!-- Nothing Selected -->
+            <div id="nothing-selected">
+                <div class="vertical-center-wrapper">
+                    <div class="vertical-center">
+                        Nothing Selected
+                    </div>
+                </div>
+            </div>
+
+            <!-- Bridge List -->
+            <div id="bridge-list">
+                <b>Bridges</b>
+                <div id="bridges"></div>
+                <div id="IBridgeControl" class="IBridgeControl">
+                    <span class="indicator-working"><img src="https://www.schoolpay.com/img/loading.gif" /></span>
+                    <span class="macaddress">#mac</span>
+                    <a class="configure">config</a>
+                </div>
+            </div>
+
+            <!-- ILightControl pallete -->
+            <div id="light-control-pallete">
+                <span class="name">#name</span>
+            </div>
+
+            <!-- Zue Debug --><div id="debug-zone"><input type="button" value="clear debug" onclick="$('#zue-debug').html('');" /><pre class="language-javascript"><code class="language-javascript" id="zue-debug"></code></pre></div>
+
+        </div>
       </div><!-- /.code -->
-      
+
       <div class="clearfix"></div>
 
       <footer class="copy">
