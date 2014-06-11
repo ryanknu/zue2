@@ -13,21 +13,21 @@
  */
 
 var HUE_MAX = 65535;
- 
+
 function Color(light)
 {
-    this.light = light;
+    this.light = light.state;
 }
 
 Color.prototype.supportsMode = function(mode) {
     if ( mode == 'ct' ) {
-    
+
     }
     else if ( mode == 'hs' ) {
-    
+
     }
     else if ( mode == 'xy' ) {
-    
+
     }
     return false;
 };
@@ -39,7 +39,7 @@ var hueToCss = function(hue)
     var C = V*S;
     var X = C * (1 - Math.abs( hue / (HUE_MAX / 6) % 2 - 1) );
     var m = V - C;
-    
+
     var q = Math.floor(hue / (HUE_MAX / 6));
     var r = {r:0, g:0, b:0};
     switch (q) {
@@ -50,13 +50,13 @@ var hueToCss = function(hue)
         case 4: r = { b: C+m, r: X+m, g: 0 }; break;
         case 5: r = { r: C+m, b: X+m, g: 0 }; break;
     }
-    
+
     var _r = [
-        Math.floor(r.r * 255), 
+        Math.floor(r.r * 255),
         Math.floor(r.g * 255),
         Math.floor(r.b * 255)
     ];
-    
+
     return 'rgb(' + _r.join(',') + ')';
 }
 
@@ -83,7 +83,7 @@ var tempToCss = function(tempInK)
 {
     var temp = tempInK / 100;
     r = { r: 0, g: 0, b: 0 };
-    
+
     if ( temp < 66 ) {
         r.r = 255;
     }
@@ -93,7 +93,7 @@ var tempToCss = function(tempInK)
         r.r = Math.max(0, r.r);
         r.r = Math.min(255, r.r);
     }
-    
+
     if ( temp < 66 ) {
         r.g = temp;
         r.g = 99.4708025861 * Math.log(r.g) - 161.1195681661;
@@ -104,7 +104,7 @@ var tempToCss = function(tempInK)
     }
     r.g = Math.max(0, r.g);
     r.g = Math.min(255, r.g);
-    
+
     if ( temp >= 66 ) {
         r.b = 255;
     }
@@ -119,46 +119,46 @@ var tempToCss = function(tempInK)
             r.b = Math.min(255, r.b);
         }
     }
-    
+
     var _r = [
-        Math.floor(r.r), 
+        Math.floor(r.r),
         Math.floor(r.g),
         Math.floor(r.b)
     ];
-    
+
     return 'rgb(' + _r.join(',') + ')';
 }
 
 Color.prototype.getCss = function()
 {
-    if ( this.light.state.colormode == 'hs' ) {
-        return hueToCss(this.light.state.hue);
+    if ( this.light.colormode == 'hs' ) {
+        return hueToCss(this.light.hue);
     }
-    else if ( this.light.state.colormode == 'ct' ) {
-        return tempToCss(convertCtToK(this.light.state.ct));
+    else if ( this.light.colormode == 'ct' ) {
+        return tempToCss(convertCtToK(this.light.ct));
     }
     return 'yellow';
 };
 
 Color.prototype.getTempInK = function()
 {
-    return convertCtToK(this.light.state.ct);
+    return convertCtToK(this.light.ct);
 };
 
 Color.prototype.getHueInDegrees = function()
 {
-    return this.light.state.hue / (HUE_MAX / 360);
+    return this.light.hue / (HUE_MAX / 360);
 };
 
 Color.prototype.toString = function()
 {
-    if ( this.light.state.colormode == 'hs' ) {
+    if ( this.light.colormode == 'hs' ) {
         return (this.getHueInDegrees()).toFixed(2) + '°';
     }
-    else if ( this.light.state.colormode == 'ct' ) {
+    else if ( this.light.colormode == 'ct' ) {
         return Math.floor(this.getTempInK()) + 'K';
     }
-    
+
     return 'XY';
 }
 
@@ -173,7 +173,7 @@ Color.prototype.toString = function()
         HUE_YELLOW: 18833,
         HUE_ORANGE: 12879
     };
-    
+
     if ( window.zue === undefined ) {
         window.zue = {
             color: _color
@@ -182,5 +182,5 @@ Color.prototype.toString = function()
     else {
         window.zue.color = _color;
     }
-    
+
 })()

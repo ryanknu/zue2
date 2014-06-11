@@ -12,6 +12,10 @@
     <link rel="stylesheet" href="assets/css/main.css">
 
     <style>
+        .hide {
+            display: none;
+        }
+
         #ILightControl,#IBridgeControl { display: none; }
 
         li.updating {
@@ -69,6 +73,11 @@
             padding-right: 150px;
             float: right;
         }
+
+        input[type=range] {
+            display: inline;
+            width: inherit;
+        }
     </style>
   </head>
   <body>
@@ -90,7 +99,25 @@
           </div>
         </div><!-- /.modal-content -->
       </div><!-- /.modal-dialog -->
-    </div><!-- /.modal -->
+  </div><!-- /.modal -->
+
+  <!-- Hue Exception Modal -->
+  <div class="modal fade" id="hue-exception">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+          <h4 class="modal-title">Hue Exception</h4>
+        </div>
+        <div class="modal-body">
+          <p>Something went wrong with the hue bridge.</p>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-primary" data-dismiss="modal">Close</button>
+        </div>
+      </div><!-- /.modal-content -->
+    </div><!-- /.modal-dialog -->
+  </div><!-- /.modal -->
 
     <div class="container">
       <div class="hero-unit">
@@ -100,19 +127,6 @@
             <a zue href="debug-zone">Debug</a>
         </div>
         <h1>zue or something</h1>
-
-        <div id="hue-exception" class="modal hide fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
-          <div class="modal-header">
-            <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
-            <h3 id="myModalLabel">Hue Exception</h3>
-          </div>
-          <div class="modal-body">
-            <p>Something went wrong with the hue bridge.</p>
-          </div>
-          <div class="modal-footer">
-            <button class="btn btn-primary" data-dismiss="modal" aria-hidden="true">Close</button>
-          </div>
-        </div>
 
         <div id="no-bridge" class="modal hide fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
           <div class="modal-header">
@@ -225,8 +239,27 @@
             </div>
 
             <!-- ILightControl pallete -->
-            <div id="light-control-pallete">
-                <span class="name">#name</span>
+            <div id="light-control-pallete" class="ILightControl">
+                <h2 data-modelkey="name">#name</h2>
+                <div>Current State: <span data-modelkey="color.toString">#color</span></div>
+                <div class="junction">
+                    <div class="hide" data-jswitch data-modelkey="state.reachable"></div>
+                    <div data-jif="true">Reachable</div>
+                    <div data-jif="false">Unreachable</div>
+                </div>
+                <div class="junction">
+                    <div class="hide" data-jswitch data-modelkey="state.colormode"></div>
+                    <div data-jif="hs">HS motha</div>
+                    <div data-jif="xy">Zue colors.js does not know how to work with XY :(</div>
+                    <div data-jif="ct">
+                        <b>CT</b><br />
+                        ~2000K <input name="ct" type="range" min="2000" max="6500" /> ~6500K
+                    </div>
+                </div>
+                <!-- Brightness -->
+                <b>Brightness</b><br />
+                25% <input name="bri" type="range" min="64" max="255" /> 100%
+
             </div>
 
             <!-- Zue Debug --><div id="debug-zone"><input type="button" value="clear debug" onclick="$('#zue-debug').html('');" /><pre class="language-javascript"><code class="language-javascript" id="zue-debug"></code></pre></div>

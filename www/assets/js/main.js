@@ -1,3 +1,16 @@
+var debounce = function(func, threshold, execAsap) {
+    var timeout;
+    return function debounced() {
+        var obj = this, args = arguments;
+        function delayed() {
+            if (!execAsap) func.apply(obj, args);
+            timeout = null;
+        }
+        if (timeout) clearTimeout(timeout); else if (execAsap) func.apply(obj, args);
+        timeout = setTimeout(delayed, threshold || 100);
+    };
+};
+
 var hoodie = new Hoodie();
 
 var sortGroups = function() {
@@ -9,6 +22,16 @@ var sortGroups = function() {
 
 function saveLight(light) {
     var c = new Color(light);
+    var big_region = $("#light_" + light.getId());
+    repoopulate(big_region, light);
+    junctions();
+    big_region.find("[name=ct]:not([init])").on("change", debounce(function() {
+        getLight(this).setK($(this).val());
+    }, 250));
+    big_region.find("[name=bri]:not([init])").on("change", debounce(function() {
+        getLight(this).setBri(parseInt($(this).val(), 10));
+    }, 250));
+    big_region.find("input").attr("init", "1");
     var quick_state = light.state.reachable && light.state.on ? c : "OFF";
     $("#" + light.getId()).show().data("model", light).find(".name").text(light.name).end().find(".state_hue").text(quick_state).css("color", c.getCss()).end();
     if (!light.state.reachable) {
@@ -51,9 +74,39 @@ function hoodieStore(bridge) {
     });
 }
 
+function resolveKey(model, key) {
+    if (key) {
+        var pieces = key.split(".");
+        var o = model;
+        var lp = o;
+        for (var i = 0; i < pieces.length; ++i) {
+            if (o === undefined) {
+                break;
+            }
+            lp = o;
+            o = o[pieces[i]];
+        }
+        if (typeof o === "function") {
+            o = o.call(lp);
+        }
+        return o;
+    }
+}
+
+function repoopulate(region, model) {
+    region.find("*").each(function() {
+        var k = $(this).data("modelkey");
+        $(this).text(resolveKey(model, k));
+    });
+}
+
 function poopulate(template, bucket, model) {
     var cl = $(template).clone();
-    cl.attr("id", "").data("model", model);
+    cl.removeAttr("id").data("model", model);
+    cl.find("*").each(function() {
+        var k = $(this).data("modelkey");
+        $(this).text(resolveKey(model, k));
+    });
     for (i in model) {
         if (typeof model[i] === "function") {
             continue;
@@ -185,6 +238,21 @@ function mainContentArea(pane) {
         $("#nothing-selected").show();
         location.hash = "/";
     }
+}
+
+function junctions() {
+    $(".junction").each(function() {
+        var $s = $(this).find("[data-jswitch]");
+        var v = $s.val() || $s.text();
+        $s = undefined;
+        $(this).find("[data-jif]").each(function() {
+            if ($(this).data("jif").toString() == v.toString()) {
+                $(this).show();
+            } else {
+                $(this).hide();
+            }
+        });
+    });
 }
 
 (function() {

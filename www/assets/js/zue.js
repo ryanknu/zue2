@@ -430,6 +430,7 @@ function Light() {
     this.swversion = "";
     this.pointsymbol = {};
     this.bridge = undefined;
+    this.color = undefined;
 }
 
 Light.prototype.exchangeData = function(data) {
@@ -443,6 +444,7 @@ Light.prototype.exchangeData = function(data) {
         this.swversion = data.swversion;
         this.pointsymbol = data.pointsymbol;
     }
+    this.color = new Color(this);
 };
 
 Light.prototype.toggle = function() {
@@ -460,6 +462,12 @@ Light.prototype.setHue = function(hue) {
 Light.prototype.setBri = function(bri) {
     zue.lights.updateLightState(this, {
         bri: bri
+    });
+};
+
+Light.prototype.setK = function(K) {
+    zue.lights.updateLightState(this, {
+        ct: Math.floor(convertKToCt(K))
     });
 };
 
@@ -657,7 +665,7 @@ zue.registerPlugin("SimulateGroupsByNames", new GroupNameImplementation());
 var HUE_MAX = 65535;
 
 function Color(light) {
-    this.light = light;
+    this.light = light.state;
 }
 
 Color.prototype.supportsMode = function(mode) {
@@ -779,26 +787,26 @@ var tempToCss = function(tempInK) {
 };
 
 Color.prototype.getCss = function() {
-    if (this.light.state.colormode == "hs") {
-        return hueToCss(this.light.state.hue);
-    } else if (this.light.state.colormode == "ct") {
-        return tempToCss(convertCtToK(this.light.state.ct));
+    if (this.light.colormode == "hs") {
+        return hueToCss(this.light.hue);
+    } else if (this.light.colormode == "ct") {
+        return tempToCss(convertCtToK(this.light.ct));
     }
     return "yellow";
 };
 
 Color.prototype.getTempInK = function() {
-    return convertCtToK(this.light.state.ct);
+    return convertCtToK(this.light.ct);
 };
 
 Color.prototype.getHueInDegrees = function() {
-    return this.light.state.hue / (HUE_MAX / 360);
+    return this.light.hue / (HUE_MAX / 360);
 };
 
 Color.prototype.toString = function() {
-    if (this.light.state.colormode == "hs") {
+    if (this.light.colormode == "hs") {
         return this.getHueInDegrees().toFixed(2) + "°";
-    } else if (this.light.state.colormode == "ct") {
+    } else if (this.light.colormode == "ct") {
         return Math.floor(this.getTempInK()) + "K";
     }
     return "XY";

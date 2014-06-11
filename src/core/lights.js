@@ -33,6 +33,7 @@ function Light()
     this.swversion = '';
     this.pointsymbol = {};
     this.bridge = undefined;
+    this.color = undefined;
 }
 
 Light.prototype.exchangeData = function(data) {
@@ -46,6 +47,7 @@ Light.prototype.exchangeData = function(data) {
         this.swversion = data.swversion;
         this.pointsymbol = data.pointsymbol;
     }
+    this.color = new Color(this);
 }
 
 Light.prototype.toggle = function() {
@@ -58,6 +60,12 @@ Light.prototype.setHue = function(hue) {
 
 Light.prototype.setBri = function(bri) {
     zue.lights.updateLightState(this, { bri: bri });
+}
+
+Light.prototype.setK = function(K) {
+    zue.lights.updateLightState(this, {
+        ct: Math.floor(convertKToCt(K))
+    });
 }
 
 Light.prototype.setSat = function(sat) {
@@ -82,14 +90,14 @@ LightUpdateResponse.prototype.exchangeData = function(data) {
 
 var _lightsZueModule = function(zue_core) {
     'use strict';
-    
+
     var LIGHTS_URL_PART = '/lights';
     var STATE_URL_PART = '/state';
-    
+
     var _lights = function(light) {
         zue_core.triggerEvent(LIGHT_ADDED, light);
     }
-    
+
     var lightUpdated = function(light_update_status) {
         if ( light_update_status.status == 'success' ) {
             var light = light_update_status.light;
@@ -101,12 +109,12 @@ var _lightsZueModule = function(zue_core) {
             });
         }
     };
-    
+
     var _lightUpdated = function(light)
     {
         zue_core.triggerEvent(LIGHT_UPDATED, light);
     }
-    
+
     var getAllLights = function(bridge) {
         var url = bridge.assembleUrl(LIGHTS_URL_PART);
         var model = new Light();
@@ -118,7 +126,7 @@ var _lightsZueModule = function(zue_core) {
             bridge: bridge
         });
     }
-    
+
     var getLightDetails = function(light) {
         var url = light.bridge.assembleUrl(LIGHTS_URL_PART + '/' + light.id);
         zue_core.ajaxExec({
@@ -127,7 +135,7 @@ var _lightsZueModule = function(zue_core) {
             success: _lights
         });
     }
-    
+
     var updateLightState = function(light, state) {
         var url = light.bridge.assembleUrl(LIGHTS_URL_PART + '/' + light.id + STATE_URL_PART );
         var model = new LightUpdateResponse();
@@ -141,7 +149,7 @@ var _lightsZueModule = function(zue_core) {
             success: lightUpdated
         });
     }
-    
+
     return {
         getAllLights: getAllLights,
         getLightDetails: getLightDetails,
