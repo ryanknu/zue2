@@ -196,6 +196,7 @@ zue.on(HUE_ERROR, function(err) {
     else if ( err.type != ERR_LINK_BUTTON_NOT_PRESSED ) {
         // RK: don't show modal if it's a link cycle.
         $('#hue-exception').modal();
+        console.log(JSON.stringify(err));
     }
 });
 

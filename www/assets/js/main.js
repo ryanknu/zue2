@@ -131,6 +131,7 @@ zue.on(HUE_ERROR, function(err) {
         createLinkButton(err.bridge);
     } else if (err.type != ERR_LINK_BUTTON_NOT_PRESSED) {
         $("#hue-exception").modal();
+        console.log(JSON.stringify(err));
     }
 });
 
@@ -211,7 +212,7 @@ function createLinkButton(bridge) {
             $(this).val("Link " + b.macaddress);
         }
     });
-    $(".content").prepend(s);
+    $(".col-md-3").prepend(s);
     s.fadeIn();
 }
 

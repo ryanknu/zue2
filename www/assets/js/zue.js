@@ -77,6 +77,55 @@ PriorityQueue.prototype._swap = function(a, b) {
     this._elements[b] = aux;
 };
 
+var isPlainObject = function(obj) {
+    if (jQuery.type(obj) !== "object" || obj.nodeType || obj != null && obj === obj.window) {
+        return false;
+    }
+    if (obj.constructor && !obj.constructor.prototype.hasOwnProperty("isPropertyOf")) {
+        return false;
+    }
+    return true;
+};
+
+var extend = function() {
+    var options, name, src, copy, copyIsArray, clone, target = arguments[0] || {}, i = 1, length = arguments.length, deep = false;
+    if (typeof target === "boolean") {
+        deep = target;
+        target = arguments[i] || {};
+        i++;
+    }
+    if (typeof target !== "object" && typeof target !== "function") {
+        target = {};
+    }
+    if (i === length) {
+        target = this;
+        i--;
+    }
+    for (;i < length; i++) {
+        if ((options = arguments[i]) != null) {
+            for (name in options) {
+                src = target[name];
+                copy = options[name];
+                if (target === copy) {
+                    continue;
+                }
+                if (deep && copy && (isPlainObject(copy) || (copyIsArray = Array.isArray(copy)))) {
+                    if (copyIsArray) {
+                        copyIsArray = false;
+                        clone = src && Array.isArray(src) ? src : [];
+                    } else {
+                        clone = src && isPlainObject(src) ? src : {};
+                    }
+                    target[name] = extend(deep, clone, copy);
+                } else if (copy !== undefined) {
+                    target[name] = copy;
+                }
+            }
+        }
+    }
+    return target;
+};
+
 function ZueAjax() {
     this.eventManager = undefined;
     this.defaults = {
@@ -97,73 +146,74 @@ ZueAjax.prototype.setEventManager = function(em) {
 };
 
 ZueAjax.prototype.exec = function(in_options) {
-    var $ = this.$;
-    var options = $.extend({}, this.defaults, in_options);
+    var options = extend({}, this.defaults, in_options);
     var em = this.eventManager;
-    var ajaxOptions = {
-        type: options.method,
-        url: options.url,
-        async: false,
-        success: function(data) {
-            if (detectArray(data)) {
-                if (data.length == 0) {
-                    if (!options.trap) {
-                        em.trigger(HUE_ERROR, {
-                            brige: options.bridge,
-                            type: 10001,
-                            description: "empty result set"
-                        });
-                    }
-                    options.failure();
-                }
-                for (var i in data) {
-                    if (data.hasOwnProperty(i)) {
-                        data[i]._i = i;
-                        if ("error" in data[i]) {
-                            if (!options.trap) {
-                                var e = data[i].error;
-                                e.bridge = options.bridge;
-                                em.trigger(HUE_ERROR, e);
-                            }
-                            options.failure();
-                        } else {
-                            var _o = $.extend(true, {}, options.model);
-                            _o.exchangeData(data[i]);
-                            options.success(_o);
-                        }
-                    }
-                }
-            } else if (typeof data === "object") {
-                if ("error" in data) {
-                    if (!options.trap) {
-                        var e = data.error;
-                        e.bridge = options.bridge;
-                        em.trigger(HUE_ERROR, e);
-                    }
-                    options.failure();
-                } else {
-                    options.model.exchangeData(data);
-                    options.success(options.model);
-                }
-            } else {
-                throw "`data` is not something I can work with";
+    var method = options.method || "get";
+    var checkResult = function(req) {
+        var d_o = {
+            failed: true,
+            type: 10001,
+            message: "Unknown error",
+            data: undefined
+        };
+        d_o.data = typeof h.response === "string" ? JSON.parse(h.response) : h.response;
+        if (h.status < 200 || h.status > 299) {
+            d_o.message = "Expected 200, got " + h.status;
+            return d_o;
+        }
+        if (!detectArray(d_o.data)) {
+            d_o.data = [ d_o.data ];
+        }
+        if (d_o.data.length < 1) {
+            d_o.message = "empty result set";
+            d_o.type = 10002;
+            return d_o;
+        }
+        for (var i in d_o.data) {
+            if (!d_o.data.hasOwnProperty(i)) continue;
+            d_o.data[i]._i = i;
+            if ("error" in d_o.data[i]) {
+                d_o.message = d_o.data[i].error.description;
+                d_o.type = d_o.data[i].error.type;
+                return d_o;
             }
-        },
-        error: function() {
-            if (!options.trap) {
-                em.trigger(HUE_ERROR, {
-                    bridge: options.bridge,
-                    type: 1e4,
-                    description: "no/bad response from server"
-                });
+        }
+        d_o.failed = false;
+        return d_o;
+    };
+    var h = new XMLHttpRequest();
+    h.timeout = 3e4;
+    h.ontimeout = options.failed;
+    h.responseType = "json";
+    h.onreadystatechange = function() {
+        if (h.readyState == 4) {
+            var res = checkResult(h);
+            if (res.failed) {
+                if (!options.trap) {
+                    em.trigger(HUE_ERROR, {
+                        bridge: options.bridge,
+                        type: res.type,
+                        description: res.message
+                    });
+                }
+                return options.failure();
             }
-            options.failure();
+            var data = res.data;
+            for (var i in data) {
+                var _o = extend(true, {}, options.model);
+                _o.exchangeData(data[i]);
+                options.success(_o);
+            }
         }
     };
+    h.open(method, options.url);
     if (options.method == "post" || options.method == "put") {
-        ajaxOptions.data = JSON.stringify(options.data);
+        h.setRequestHeader("Content-Type", "application/json");
+        h.setRequestHeader("Accept", "application/json");
+        h.send(JSON.stringify(options.data));
+    } else {
+        h.send();
     }
-    $.ajax(ajaxOptions);
 };
 
 function ZueEventManager() {

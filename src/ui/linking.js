@@ -48,6 +48,6 @@ function createLinkButton(bridge) {
                 $(this).val( 'Link ' + b.macaddress);
             }
         });
-    $('.content').prepend(s);
+    $('.col-md-3').prepend(s);
     s.fadeIn();
 }
