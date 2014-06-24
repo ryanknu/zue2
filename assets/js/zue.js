@@ -276,12 +276,13 @@ var LINK_BEGIN = "config.link_begin";
 
 var LINKED = "config.linked";
 
-String.prototype.pad = function(len, chr) {
-    var pad_len = len - this.length + 1;
-    if (pad_len > 0) {
-        return Array(pad_len).join(chr) + this;
+function _Z(deps, cb) {
+    var args = [];
+    for (var i = 0; i < deps.length; i++) {
+        args.push(zue.di[deps[i]]);
     }
-};
+    cb.apply(null, args);
+}
 
 var detectArray = function(o) {
     if (o !== undefined && !!o.shift) {
@@ -302,58 +303,87 @@ var detectArray = function(o) {
     return any_keys;
 };
 
-function ZueCore(IAjax, IEventManager) {
-    this.modules = {};
-    this.plugins = {};
-    this.IAjax = IAjax;
-    this.IAjax.setEventManager(IEventManager);
-    this.IEventManager = IEventManager;
-    this.log_target = "#zue-debug";
-    this.triggers = 0;
-    this.start = 0;
-}
-
-ZueCore.prototype.log = function(msg) {
-    if (!this.start) {
-        this.start = Date.now();
+(function() {
+    "use strict";
+    String.prototype.pad = function(len, chr) {
+        var pad_len = len - this.length + 1;
+        if (pad_len > 0) {
+            return Array(pad_len).join(chr) + this;
+        }
+    };
+    function ZueCore(IAjax, IEventManager) {
+        this.modules = {};
+        this.plugins = {};
+        this.IAjax = IAjax;
+        this.IAjax.setEventManager(IEventManager);
+        this.IEventManager = IEventManager;
+        this.log_target = "#zue-debug";
+        this.triggers = 0;
+        this.start = 0;
     }
-    if ($(this.log_target).length) {
-        $(this.log_target).prepend($("<div/>").text((this.triggers++).toString().pad(3, "0") + " (T+" + (Date.now() - this.start).toString().pad(6, "0") + ") " + msg));
-    }
-};
-
-ZueCore.prototype.attach = function(module, o) {
-    this.modules[module] = o(this);
-    this[module] = this.modules[module];
-};
-
-ZueCore.prototype.enablePlugin = function(name) {
-    this.plugins[name].start(this);
-};
-
-ZueCore.prototype.registerPlugin = function(name, plugin) {
-    this.plugins[name] = plugin;
-};
-
-ZueCore.prototype.triggerEvent = function(event, argument, object) {
-    this.log("event: " + event + " Arg: " + JSON.stringify(argument));
-    this.IEventManager.trigger(event, argument, object);
-};
-
-ZueCore.prototype.listenFor = function(event, listener, object) {
-    this.IEventManager.attach(event, listener, object);
-};
-
-ZueCore.prototype.on = function(event, listener, object) {
-    this.listenFor(event, listener, object);
-};
-
-ZueCore.prototype.ajaxExec = function(options) {
-    this.log("ajax:  " + (options.method || "get") + " " + options.url);
-    this.IAjax.exec(options);
-};
-
-window.zue = new ZueCore(new ZueAjax(), new ZueEventManager());
+    var log = function(msg) {
+        if (!start) {
+            start = Date.now();
+        }
+        if ($(log_target).length) {
+            $(log_target).prepend($("<div/>").text((triggers++).toString().pad(3, "0") + " (T+" + (Date.now() - start).toString().pad(6, "0") + ") " + msg));
+        }
+    };
+    ZueCore.prototype.attach = function(module, o) {
+        this.modules[module] = o;
+        this[module] = this.modules[module];
+    };
+    ZueCore.prototype.enablePlugin = function(name) {
+        this.plugins[name].start(this);
+    };
+    ZueCore.prototype.registerPlugin = function(name, plugin) {
+        this.plugins[name] = plugin;
+    };
+    var triggerEvent = function(event, argument, object) {
+        log("event: " + event + " Arg: " + JSON.stringify(argument));
+        ieventmanager.trigger(event, argument, object);
+    };
+    ZueCore.prototype.listenFor = function(event, listener, object) {
+        this.IEventManager.attach(event, listener, object);
+    };
+    ZueCore.prototype.on = function(event, listener, object) {
+        this.listenFor(event, listener, object);
+    };
+    ZueCore.prototype.ajaxExec = function(options) {
+        this.log("ajax:  " + (options.method || "get") + " " + options.url);
+        this.IAjax.exec(options);
+    };
+    var iajax = new ZueAjax(), ieventmanager = new ZueEventManager(), log_target = "#zue-debug", triggers = 0, start = 0, modules = [], plugins = {};
+    var register = function(module, o) {
+        modules.push(module);
+        zue.di[module] = o;
+    };
+    var registerPlugin = function(name, cb) {
+        plugins[name] = cb;
+    };
+    var enablePlugin = function(name) {
+        plugins[name]();
+    };
+    var listenFor = function(event, listener, object) {
+        ieventmanager.attach(event, listener, object);
+    };
+    var ajaxExec = function(options) {
+        log("ajax:  " + (options.method || "get") + " " + options.url);
+        iajax.exec(options);
+    };
+    iajax.setEventManager(ieventmanager);
+    var _core = {
+        di: {},
+        register: register,
+        triggerEvent: triggerEvent,
+        listenFor: listenFor,
+        on: listenFor,
+        ajaxExec: ajaxExec,
+        registerPlugin: registerPlugin,
+        enablePlugin: enablePlugin
+    };
+    _core.di.core = window.zue = _core;
+})();
 
 function Bridge() {
     this.id = "";
@@ -387,7 +417,7 @@ Bridge.prototype.getSafeMacAddress = function() {
     return this.macaddress.replace(/:/g, "");
 };
 
-var _bridgeZueModule = function(zue_core) {
+_Z([ "core" ], function(zue_core) {
     "use strict";
     var PORTAL_LOCAL_DISCOVERY_URL = "https://www.meethue.com/api/nupnp";
     var foundBridge = function(bridge) {
@@ -408,16 +438,14 @@ var _bridgeZueModule = function(zue_core) {
             trap: true
         });
     };
-    return {
+    zue_core.register("bridge", {
         locate: locate,
         _foundBridge: foundBridge,
         _noBridgeFound: noBridgeFound
-    };
-};
+    });
+});
 
-zue.attach("bridge", _bridgeZueModule);
-
-var _configZueModule = function(zue_core) {
+_Z([ "core" ], function(zue_core) {
     "use strict";
     var ZUE_DEVICE_TYPE = ";zue-powered";
     var MAX_DEVICE_TYPE_LEN = 40;
@@ -451,14 +479,12 @@ var _configZueModule = function(zue_core) {
         request.username = username;
         _createUser(bridge, request);
     };
-    return {
+    zue_core.register("config", {
         createUser: createUser,
         createAnonUser: createAnonUser,
         _createUser: _createUser
-    };
-};
-
-zue.attach("config", _configZueModule);
+    });
+});
 
 function Light() {
     this.id = "";
@@ -542,7 +568,9 @@ LightUpdateResponse.prototype.exchangeData = function(data) {
     }
 };
 
-var _lightsZueModule = function(zue_core) {
+_Z([ "core" ], function() {});
+
+_Z([ "core" ], function(zue_core) {
     "use strict";
     var LIGHTS_URL_PART = "/lights";
     var STATE_URL_PART = "/state";
@@ -595,14 +623,12 @@ var _lightsZueModule = function(zue_core) {
             success: lightUpdated
         });
     };
-    return {
+    zue_core.register("lights", {
         getAllLights: getAllLights,
         getLightDetails: getLightDetails,
         updateLightState: updateLightState
-    };
-};
-
-zue.attach("lights", _lightsZueModule);
+    });
+});
 
 function Group() {
     this.id = "";
@@ -626,7 +652,7 @@ Group.prototype.getId = function() {
     return "group-" + this.bridge.getSafeMacAddress() + "-" + this.id;
 };
 
-var _groupsZueModule = function(zue_core) {
+_Z([ "core" ], function(zue_core) {
     "use strict";
     var use_soft_groups = false;
     var all_groups = [];
@@ -663,54 +689,44 @@ var _groupsZueModule = function(zue_core) {
     var addLightToGroup = function(group) {
         zue_core.triggerEvent(GROUP_LIGHT_ADDED, group);
     };
-    return {
+    zue_core.register("groups", {
         getAllGroups: getAllGroups,
         addGroup: addGroup,
         addLightToGroup: addLightToGroup
-    };
-};
+    });
+});
 
-zue.attach("groups", _groupsZueModule);
-
-function GroupNameImplementation() {
-    this.all_groups = [];
-    this.zue_core = undefined;
-}
-
-GroupNameImplementation.prototype.start = function(zue_core) {
-    this.zue_core = zue_core;
-    this.zue_core.listenFor(LIGHT_ADDED, this.lightAdded, this);
-};
-
-GroupNameImplementation.prototype.getAGroup = function(group_name, bridge) {
-    for (var i = 0; i < this.all_groups.length; i++) {
-        if (this.all_groups[i].name == group_name) {
-            return this.all_groups[i];
+_Z([ "core", "groups" ], function(zue_core, groups) {
+    var all_groups = [];
+    var lightAdded = function(light) {
+        var name = light.name, group_name = "default".parts = name.split("/"), group;
+        if (parts.length > 1) {
+            group_name = parts[0];
         }
-    }
-    var g = new Group();
-    g.impl = "impl_name";
-    g.name = group_name;
-    g.id = group_name;
-    g.bridge = bridge;
-    this.all_groups.push(g);
-    zue.groups.addGroup(g);
-    return g;
-};
-
-GroupNameImplementation.prototype.lightAdded = function(light) {
-    var name = light.name;
-    var group_name = "default";
-    var parts = name.split("/");
-    if (parts.length > 1) {
-        group_name = parts[0];
-    }
-    var group = this.getAGroup(group_name, light.bridge);
-    group.addLight(light);
-    zue.groups.addLightToGroup(group);
-};
-
-zue.registerPlugin("SimulateGroupsByNames", new GroupNameImplementation());
+        group = getAGroup(group_name, light.bridge);
+        group.addLight(light);
+        groups.addLightToGroup(group);
+    };
+    var getAGroup = function(group_name, bridge) {
+        var i = 0, g;
+        for (;i < all_groups.length; i++) {
+            if (all_groups[i].name == group_name) {
+                return all_groups[i];
+            }
+        }
+        var g = new Group();
+        g.impl = "impl_name";
+        g.name = group_name;
+        g.id = group_name;
+        g.bridge = bridge;
+        all_groups.push(g);
+        groups.addGroup(g);
+        return g;
+    };
+    zue_core.registerPlugin("SimulateGroupsByNames", function() {
+        zue_core.listenFor(LIGHT_ADDED, lightAdded);
+    });
+});
 
 var HUE_MAX = 65535;
 
@@ -900,7 +916,7 @@ Schedule.prototype.exchangeData = function(data) {
     this.time = data.time || "";
 };
 
-var _schedZueModule = function(zue_core) {
+_Z("schedules", function(zue_core) {
     "use strict";
     var SCHEDULES_URL_PART = "/schedules";
     var STATE_URL_PART = "/state";
@@ -962,11 +978,9 @@ var _schedZueModule = function(zue_core) {
             success: _schedule
         });
     };
-    return {
+    zue.register("schedules", {
         getAllSchedules: getAllSchedules,
         getLightDetails: getLightDetails,
         updateLightState: updateLightState
-    };
-};
-
-zue.attach("schedules", _schedZueModule);
+    });
+});

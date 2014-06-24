@@ -31,24 +31,24 @@ var LINK_FAILURE = 'config.link_failure';
 var LINK_BEGIN = 'config.link_begin';
 var LINKED = 'config.linked';
 
-String.prototype.pad = function(len, chr)
-{
-    var pad_len = len - this.length + 1;
-    if ( pad_len > 0 ) {
-        return Array(pad_len).join(chr) + this;
+function _Z(deps, cb) {
+    var args = [];
+    for ( var i = 0; i < deps.length; i++ ) {
+        args.push(zue.di[deps[i]]);
     }
+    cb.apply(null, args);
 }
 
 var detectArray = function(o) {
     if ( o !== undefined && !!o.shift ) {
         return true;
     }
-    
-    // RK: we now need to try to detect 1-based arrays, which is irritating. 
+
+    // RK: we now need to try to detect 1-based arrays, which is irritating.
     if ( typeof o !== 'object' ) {
         return false;
     }
-    
+
     var any_keys = false;
     for( var y in o) {
         if ( o.hasOwnProperty(y) ) {
@@ -60,6 +60,34 @@ var detectArray = function(o) {
     }
     return any_keys;
 }
+
+;(function() {
+    'use strict';
+
+String.prototype.pad = function(len, chr)
+{
+    var pad_len = len - this.length + 1;
+    if ( pad_len > 0 ) {
+        return Array(pad_len).join(chr) + this;
+    }
+}
+/*
+Function.prototype.method = function(name, func)
+{
+    this.prototype[name] = func;
+    return this;
+}
+
+Function.method('curry', function() {
+    var slice = Array.prototype.slice,
+        args = arguments,
+        that = this;
+    return function() {
+        that.apply(null, args.concat(slice.apply(arguments)));
+    };
+});
+*/
+
 
 function ZueCore(IAjax, IEventManager)
 {
@@ -73,18 +101,18 @@ function ZueCore(IAjax, IEventManager)
     this.start = 0;
 }
 
-ZueCore.prototype.log = function(msg)
+var log = function(msg)
 {
-    if ( !this.start ) {
-        this.start = Date.now();
+    if ( !start ) {
+        start = Date.now();
     }
-    
-    if ( $(this.log_target).length ) {
-        $(this.log_target).prepend($('<div/>').text(
-            (this.triggers++).toString().pad(3, '0') +
+
+    if ( $(log_target).length ) {
+        $(log_target).prepend($('<div/>').text(
+            (triggers++).toString().pad(3, '0') +
             ' (T+' +
-            (Date.now() - this.start).toString().pad(6, '0') + 
-            ') ' + 
+            (Date.now() - start).toString().pad(6, '0') +
+            ') ' +
             msg)
         );
     }
@@ -92,7 +120,7 @@ ZueCore.prototype.log = function(msg)
 
 ZueCore.prototype.attach = function(module, o)
 {
-    this.modules[module] = o(this);
+    this.modules[module] = o;
     this[module] = this.modules[module];
 }
 
@@ -106,10 +134,9 @@ ZueCore.prototype.registerPlugin = function(name, plugin)
     this.plugins[name] = plugin;
 }
 
-ZueCore.prototype.triggerEvent = function(event, argument, object)
-{
-    this.log('event: ' + event + ' Arg: ' + JSON.stringify(argument));
-    this.IEventManager.trigger(event, argument, object);
+var triggerEvent = function(event, argument, object) {
+    log('event: ' + event + ' Arg: ' + JSON.stringify(argument));
+    ieventmanager.trigger(event, argument, object);
 }
 
 ZueCore.prototype.listenFor = function(event, listener, object)
@@ -128,4 +155,52 @@ ZueCore.prototype.ajaxExec = function(options)
     this.IAjax.exec(options);
 }
 
-window.zue = new ZueCore(new ZueAjax(), new ZueEventManager());
+var iajax = new ZueAjax(),
+    ieventmanager = new ZueEventManager(),
+    log_target = '#zue-debug',
+    triggers = 0,
+    start = 0,
+    modules = [],
+    plugins = {};
+
+var register = function(module, o) {
+    modules.push(module);
+    zue.di[module] = o;
+//    zue[module] = o; // legacy!
+}
+
+var registerPlugin = function(name, cb) {
+    plugins[name] = cb;
+}
+
+var enablePlugin = function(name) {
+    plugins[name]();
+}
+
+var listenFor = function(event, listener, object) {
+    ieventmanager.attach(event, listener, object);
+}
+
+var ajaxExec = function(options) {
+    log('ajax:  ' + (options.method || 'get') + ' ' + options.url);
+    iajax.exec(options);
+}
+
+iajax.setEventManager(ieventmanager);
+
+var _core = {
+    di: {},
+
+    // methods (?)
+    register: register,
+    triggerEvent: triggerEvent,
+    listenFor: listenFor,
+    on: listenFor,
+    ajaxExec: ajaxExec,
+    registerPlugin: registerPlugin,
+    enablePlugin: enablePlugin
+}//new ZueCore(new ZueAjax(), new ZueEventManager());
+
+_core.di.core = window.zue = _core;
+
+})();

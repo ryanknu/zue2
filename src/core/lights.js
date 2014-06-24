@@ -88,7 +88,11 @@ LightUpdateResponse.prototype.exchangeData = function(data) {
     }
 };
 
-var _lightsZueModule = function(zue_core) {
+_Z(["core"], function() {
+
+});
+
+_Z(["core"], function(zue_core) {
     'use strict';
 
     var LIGHTS_URL_PART = '/lights';
@@ -150,11 +154,9 @@ var _lightsZueModule = function(zue_core) {
         });
     }
 
-    return {
+    zue_core.register('lights', {
         getAllLights: getAllLights,
         getLightDetails: getLightDetails,
         updateLightState: updateLightState,
-    }
-};
-
-zue.attach('lights', _lightsZueModule);
+    });
+});

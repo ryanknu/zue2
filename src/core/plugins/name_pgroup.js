@@ -12,23 +12,31 @@
  *
  */
 
-function GroupNameImplementation()
-{
-    this.all_groups = [];
-    this.zue_core = undefined;
+_Z(['core', 'groups'], function(zue_core, groups) {
+// /*
+
+var all_groups = [];
+
+var lightAdded = function(light) {
+    var name = light.name,
+        group_name = 'default'.
+        parts = name.split('/'),
+        group;
+
+    if ( parts.length > 1 ) {
+        group_name = parts[0];
+    }
+    group = getAGroup(group_name, light.bridge);
+    group.addLight(light);
+    groups.addLightToGroup(group);
 }
 
-GroupNameImplementation.prototype.start = function(zue_core)
+var getAGroup = function(group_name, bridge)
 {
-    this.zue_core = zue_core;
-    this.zue_core.listenFor(LIGHT_ADDED, this.lightAdded, this);
-}
-
-GroupNameImplementation.prototype.getAGroup = function(group_name, bridge)
-{
-    for ( var i = 0; i < this.all_groups.length; i++ ) {
-        if ( this.all_groups[i].name == group_name ) {
-            return this.all_groups[i];
+    var i = 0, g;
+    for ( ; i < all_groups.length; i++ ) {
+        if ( all_groups[i].name == group_name ) {
+            return all_groups[i];
         }
     }
     var g = new Group();
@@ -36,22 +44,14 @@ GroupNameImplementation.prototype.getAGroup = function(group_name, bridge)
     g.name = group_name;
     g.id = group_name;
     g.bridge = bridge;
-    this.all_groups.push(g);
-    zue.groups.addGroup(g);
+    all_groups.push(g);
+    groups.addGroup(g);
     return g;
 }
 
-GroupNameImplementation.prototype.lightAdded = function(light)
-{
-    var name = light.name;
-    var group_name = 'default';
-    var parts = name.split('/');
-    if ( parts.length > 1 ) {
-        group_name = parts[0];
-    }
-    var group = this.getAGroup(group_name, light.bridge);
-    group.addLight(light);
-    zue.groups.addLightToGroup(group);
-}
+zue_core.registerPlugin('SimulateGroupsByNames', function() {
+    zue_core.listenFor(LIGHT_ADDED, lightAdded);
+});
 
-zue.registerPlugin('SimulateGroupsByNames', new GroupNameImplementation());
+// */
+});

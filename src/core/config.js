@@ -12,20 +12,20 @@
  *
  */
 
-var _configZueModule = function(zue_core) {
+_Z(['core'], function(zue_core) {
     'use strict';
     var ZUE_DEVICE_TYPE = ';zue-powered';
     var MAX_DEVICE_TYPE_LEN = 40;
-    
+
     var LINK_TIMEOUT = 60000;
     var LINK_INTERVAL = 5000;
-    
+
     var settings = {};
-    
+
     var userCreated = function(bridge) {
         zue_core.triggerEvent(LINKED, bridge);
     }
-    
+
     var _createUser = function(bridge, request) {
         zue_core.triggerEvent(LINK_BEGIN, bridge);
         zue_core.ajaxExec({
@@ -37,30 +37,28 @@ var _configZueModule = function(zue_core) {
             bridge: bridge
         });
     }
-    
+
     var getDeviceType = function(user_devicetype) {
         return {
             devicetype: user_devicetype.substr(0, MAX_DEVICE_TYPE_LEN - ZUE_DEVICE_TYPE.length) + ZUE_DEVICE_TYPE
         }
     }
-    
+
     var createAnonUser = function(bridge, devicetype) {
         _createUser( bridge, getDeviceType(devicetype) );
     }
-    
+
     var createUser = function(bridge, devicetype, username) {
         var request = getDeviceType(devicetype);
         request.username = username;
         _createUser(bridge, request);
     };
-    
-    return {
+
+    zue_core.register('config', {
         createUser: createUser,
         createAnonUser: createAnonUser,
-        
+
         /* testing only */
         _createUser: _createUser
-    }
-};
-
-zue.attach('config', _configZueModule);
+    });
+});

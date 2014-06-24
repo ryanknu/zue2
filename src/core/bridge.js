@@ -11,7 +11,7 @@
  *  Zue Core -- Ryan Knuesel -- 2014
  *
  */
- 
+
 
 function Bridge() {
     this.id = '';
@@ -54,10 +54,10 @@ Bridge.prototype.getSafeMacAddress = function() {
     return this.macaddress.replace(/:/g, '');
 }
 
-var _bridgeZueModule = function(zue_core) {
+_Z(['core'], function(zue_core) {
     'use strict';
     var PORTAL_LOCAL_DISCOVERY_URL = 'https://www.meethue.com/api/nupnp';
-    
+
     /**
      * @test: #b03
      */
@@ -65,7 +65,7 @@ var _bridgeZueModule = function(zue_core) {
         zue_core.triggerEvent(BRIDGE_FOUND, bridge);
         return '_bridgeZueModule.foundBridge';
     };
-    
+
     /**
      * @test: #b04
      */
@@ -73,7 +73,7 @@ var _bridgeZueModule = function(zue_core) {
         zue_core.triggerEvent(NO_BRIDGE_FOUND);
         return '_bridgeZueModule.noBridgeFound';
     }
-    
+
     /**
      * @test: #b02
      */
@@ -88,17 +88,12 @@ var _bridgeZueModule = function(zue_core) {
             trap: true
         });
     }
-    
-    return {
+
+    zue_core.register('bridge', {
         locate: locate,
-        
+
         /* Private members here for testing */
         _foundBridge: foundBridge,
         _noBridgeFound: noBridgeFound
-    };
-}
-
-/**
- * @test: #b01
- */
-zue.attach('bridge', _bridgeZueModule);
+    });
+});

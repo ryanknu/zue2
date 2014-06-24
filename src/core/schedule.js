@@ -32,16 +32,16 @@ Schedule.prototype.exchangeData = function(data)
     this.time = data.time || '';
 }
 
-var _schedZueModule = function(zue_core) {
+_Z('schedules', function(zue_core) {
     'use strict';
-    
+
     var SCHEDULES_URL_PART = '/schedules';
     var STATE_URL_PART = '/state';
-    
+
     var _lights = function(light) {
         zue_core.triggerEvent(LIGHT_ADDED, light);
     }
-    
+
     var lightUpdated = function(light_update_status) {
         if ( light_update_status.status == 'success' ) {
             var light = light_update_status.light;
@@ -53,12 +53,12 @@ var _schedZueModule = function(zue_core) {
             });
         }
     };
-    
+
     var _lightUpdated = function(light)
     {
         zue_core.triggerEvent(LIGHT_UPDATED, light);
     }
-    
+
     var getAllLights = function(bridge) {
         var url = bridge.assembleUrl(LIGHTS_URL_PART);
         var model = new Light();
@@ -69,7 +69,7 @@ var _schedZueModule = function(zue_core) {
             success: _lights
         });
     }
-    
+
     var getLightDetails = function(light) {
         var url = light.bridge.assembleUrl(LIGHTS_URL_PART + '/' + light.id);
         zue_core.ajaxExec({
@@ -78,7 +78,7 @@ var _schedZueModule = function(zue_core) {
             success: _lights
         });
     }
-    
+
     var updateLightState = function(light, state) {
         var url = light.bridge.assembleUrl(SCHEDULES_URL_PART + '/' + light.id + STATE_URL_PART );
         var model = new LightUpdateResponse();
@@ -92,12 +92,12 @@ var _schedZueModule = function(zue_core) {
             success: lightUpdated
         });
     }
-    
+
     var _schedule = function(sched)
     {
         zue_core.triggerEvent(SCHEDULE_ADDED, sched);
     }
-    
+
     var getAllSchedules = function(bridge)
     {
         zue_core.ajaxExec({
@@ -106,12 +106,10 @@ var _schedZueModule = function(zue_core) {
             success: _schedule
         });
     }
-    
-    return {
+
+    zue.register('schedules', {
         getAllSchedules: getAllSchedules,
         getLightDetails: getLightDetails,
         updateLightState: updateLightState,
-    }
-};
-
-zue.attach('schedules', _schedZueModule);
+    });
+});

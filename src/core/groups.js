@@ -38,15 +38,15 @@ Group.prototype.getId = function()
     return 'group-' + this.bridge.getSafeMacAddress() + '-'  + this.id;
 }
 
-var _groupsZueModule = function(zue_core) {
+_Z(['core'], function(zue_core) {
     'use strict';
     var use_soft_groups = false;
     var all_groups = [];
-    
+
     var GROUP_IMPL_HARDWARE = 'hardware';
     var GROUP_IMPL_NAME = 'name';
     var GROUP_IMPL_SCHEDULE = 'schedule';
-    
+
     var getAGroup = function(group_name)
     {
         for ( var i = 0; i < all_groups.length; i++ ) {
@@ -60,7 +60,7 @@ var _groupsZueModule = function(zue_core) {
         zue_core.triggerEvent(GROUP_ADDED, g);
         return g;
     }
-    
+
     var softLightAdded = function(light)
     {
         var name = light.name;
@@ -73,7 +73,7 @@ var _groupsZueModule = function(zue_core) {
         group.addLight(light);
         zue_core.triggerEvent(GROUP_LIGHT_ADDED, group);
     }
-    
+
 //     var getAllGroups = function(bridge) {
 //         var url = bridge.assembleUrl(LIGHTS_URL_PART);
 //         var model = new Light();
@@ -86,20 +86,18 @@ var _groupsZueModule = function(zue_core) {
 //     }
 
     var getAllGroups;
-    
+
     var addGroup = function(group) {
         zue_core.triggerEvent(GROUP_ADDED, group);
     }
-    
+
     var addLightToGroup = function(group) {
         zue_core.triggerEvent(GROUP_LIGHT_ADDED, group);
     }
-    
-    return {
+
+    zue_core.register('groups', {
         getAllGroups: getAllGroups,
         addGroup: addGroup,
         addLightToGroup: addLightToGroup,
-    }
-};
-
-zue.attach('groups', _groupsZueModule);
+    });
+});
